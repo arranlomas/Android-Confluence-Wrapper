@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.facebook.stetho.Stetho
-import com.facebook.stetho.inspector.protocol.module.CSS
 import com.schiwfty.torrentwrapper.dagger.network.DaggerTorrentRepositoryComponent
 import com.schiwfty.torrentwrapper.dagger.network.NetworkModule
 import com.schiwfty.torrentwrapper.dagger.network.TorrentRepositoryComponent
@@ -30,7 +29,7 @@ object Confluence {
     lateinit var daemonPort: String
 
     lateinit var workingDir: File
-    lateinit var torrentRepo: File
+    lateinit var torrentInfoStorage: File
     val startedSubject = PublishSubject.create<ConfluenceState>()!!
     val subscriptions = CompositeSubscription()
     lateinit var torrentRepository: ITorrentRepository
@@ -54,7 +53,7 @@ object Confluence {
         Log.v("architecture", arch)
 
         workingDir = File(workingDirectoryPath)
-        torrentRepo  = File(com.schiwfty.torrentwrapper.confluence.Confluence.workingDir.absolutePath + java.io.File.separator + "torrents")
+        torrentInfoStorage = File(com.schiwfty.torrentwrapper.confluence.Confluence.workingDir.absolutePath + java.io.File.separator + "torrents")
         torrentRepositoryComponent = DaggerTorrentRepositoryComponent.builder()
                 .networkModule(NetworkModule())
                 .build()
@@ -103,7 +102,7 @@ object Confluence {
                 .subscribe({
                     if (it != null && it) {
                         workingDir.mkdirs()
-                        torrentRepo.mkdirs()
+                        torrentInfoStorage.mkdirs()
                         val daemonIntent = Intent(activity, ConfluenceDaemonService::class.java)
                         daemonIntent.putExtra(ConfluenceDaemonService.ARG_NOTIFICATION_ICON_RES, notificationResourceId)
                         daemonIntent.addCategory(ConfluenceDaemonService.TAG)

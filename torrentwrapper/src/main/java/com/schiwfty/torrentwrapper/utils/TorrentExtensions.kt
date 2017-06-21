@@ -138,10 +138,10 @@ fun File.isValidTorrentFile():Boolean{
 
 fun File.copyToTorrentDirectory():Boolean{
     if(!isValidTorrentFile()) return false
-    if (parentFile.absolutePath.equals(Confluence.torrentRepo)) return true
-    val testFile = File(Confluence.torrentRepo.absolutePath + File.separator + name)
+    if (parentFile.absolutePath.equals(Confluence.torrentInfoStorage)) return true
+    val testFile = File(Confluence.torrentInfoStorage.absolutePath + File.separator + name)
     if(testFile.exists())return true
-    val result = copyTo(File(Confluence.torrentRepo.absolutePath, name), true)
+    val result = copyTo(File(Confluence.torrentInfoStorage.absolutePath, name), true)
     return result.isValidTorrentFile()
 }
 

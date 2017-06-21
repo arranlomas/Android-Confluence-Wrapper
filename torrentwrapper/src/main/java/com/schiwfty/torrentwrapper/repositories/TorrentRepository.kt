@@ -6,7 +6,7 @@ import android.content.Context.DOWNLOAD_SERVICE
 import android.net.Uri
 import android.util.Log
 import com.schiwfty.torrentwrapper.confluence.Confluence
-import com.schiwfty.torrentwrapper.confluence.Confluence.torrentRepo
+import com.schiwfty.torrentwrapper.confluence.Confluence.torrentInfoStorage
 import com.schiwfty.torrentwrapper.models.ConfluenceInfo
 import com.schiwfty.torrentwrapper.models.FileStatePiece
 import com.schiwfty.torrentwrapper.models.TorrentFile
@@ -80,14 +80,14 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
         return confluenceApi.getInfo(hash)
                 .composeIo()
                 .map {
-                    val file: File = File(torrentRepo, "$hash.torrent")
+                    val file: File = File(torrentInfoStorage, "$hash.torrent")
                     val torrentInfo = file.getAsTorrent()
                     torrentInfo
                 }
     }
 
     override fun getTorrentInfo(hash: String): Observable<TorrentInfo?> {
-        val file: File = File(torrentRepo, "$hash.torrent")
+        val file: File = File(torrentInfoStorage, "$hash.torrent")
         if (file.isValidTorrentFile()) {
             val torrentInfo = file.getAsTorrent()
             return Observable.just(torrentInfo)
@@ -97,7 +97,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     override fun getAllTorrentsFromStorage(): Observable<List<TorrentInfo>> {
         return Observable.just({
             val torrentList = mutableListOf<TorrentInfo>()
-            torrentRepo.walkTopDown().iterator().forEach {
+            torrentInfoStorage.walkTopDown().iterator().forEach {
                 if (it.isValidTorrentFile()) {
                     val torrentInfo = it.getAsTorrent()
                     if (torrentInfo != null) torrentList.add(torrentInfo)
@@ -136,7 +136,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     }
 
     override fun deleteTorrentInfoFromStorage(torrentInfo: TorrentInfo): Boolean {
-        val file = File(torrentRepo.absolutePath, "${torrentInfo.info_hash}.torrent")
+        val file = File(torrentInfoStorage.absolutePath, "${torrentInfo.info_hash}.torrent")
         val deleted = file.delete()
         if (deleted) torrentInfoDeleteListener.onNext(torrentInfo)
         return deleted

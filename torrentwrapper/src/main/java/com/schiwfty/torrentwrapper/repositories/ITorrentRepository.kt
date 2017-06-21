@@ -53,8 +53,9 @@ interface ITorrentRepository {
     //deletes the data relating to a torrent file
     fun deleteTorrentFileData(torrentFile: TorrentFile): Boolean
 
-
+    //deletes a torrent file from storage
     fun deleteTorrentInfoFromStorage(torrentInfo: TorrentInfo): Boolean
 
+    //gets a downloading file from persistence
     fun getTorrentFileFromPersistence(hash: String, path: String): TorrentFile?
 }
