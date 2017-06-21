@@ -1,0 +1,19 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+
+    package="com.schiwfty.torrentwrapper">
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application android:allowBackup="true" android:label="@string/app_name"
+        android:supportsRtl="true">
+
+        <service
+            android:name="com.schiwfty.torrentwrapper.confluence.ConfluenceDaemonService"
+            android:enabled="true"
+            android:exported="false" />
+
+    </application>
+
+</manifest>
