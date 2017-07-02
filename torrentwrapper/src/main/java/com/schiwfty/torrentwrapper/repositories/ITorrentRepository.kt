@@ -1,5 +1,6 @@
 package com.schiwfty.torrentwrapper.repositories
 
+import android.app.Activity
 import android.content.Context
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
@@ -32,7 +33,7 @@ interface ITorrentRepository {
 
     fun startFileDownloading(torrentFile: TorrentFile, context: Context, wifiOnly: Boolean)
 
-    fun addTorrentToClient(file: File)
+    fun addFileToClient(activity: Activity, file: File): PublishSubject<TorrentInfo>
 
     //PERSISTENCE
     //adds a torrent file to the realm database

@@ -18,8 +18,6 @@ import java.net.URLEncoder
 import java.security.MessageDigest
 import java.util.*
 import java.util.regex.Pattern
-import kotlin.experimental.and
-import kotlin.experimental.or
 
 
 /**
@@ -172,7 +170,8 @@ fun TorrentFile.canCast(): Boolean {
     } else return false
 }
 
-fun File.createTorrent(outputFile: File): Pair<String, File> {
+fun File.createTorrent(): Pair<String, File> {
+    val outputFile = File(parentFile.absolutePath, "$name.torrent")
     val torrentCreator = TorrentCreator()
     val pieceLength = 512 * 1024
     val pieces = torrentCreator.hashPieces(this, pieceLength)
@@ -192,7 +191,7 @@ fun File.createTorrent(outputFile: File): Pair<String, File> {
     return Pair(infoHash, outputFile)
 }
 
-fun File.hashMetaInfo(): String {
+private fun File.hashMetaInfo(): String {
     val sha1 = MessageDigest.getInstance("SHA-1")
     var input: InputStream? = null
 
@@ -222,7 +221,7 @@ fun File.hashMetaInfo(): String {
 
     val sb = StringBuffer()
 
-    (0..hash.size).map {
+    (0..hash.size-1).map {
         val hex = Integer.toHexString(hash[it].toInt() and 0xff or 0x100).substring(1, 3)
         sb.append(hex)
     }

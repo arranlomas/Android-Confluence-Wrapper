@@ -33,7 +33,7 @@ public class TorrentCreator {
             "http://tracker.trackerfix.com/announce"
     };
 
-    public void encodeObject(Object o, OutputStream out) throws IOException {
+    private void encodeObject(Object o, OutputStream out) throws IOException {
         if (o instanceof String)
             encodeString((String) o, out);
         else if (o instanceof Map)
@@ -48,30 +48,30 @@ public class TorrentCreator {
             throw new Error("Unencodable type");
     }
 
-    public void encodeLong(long value, OutputStream out) throws IOException {
+    private void encodeLong(long value, OutputStream out) throws IOException {
         out.write('i');
         out.write(Long.toString(value).getBytes("US-ASCII"));
         out.write('e');
     }
 
 
-    public void encodeList(String[] list, OutputStream out) throws IOException {
+    private void encodeList(String[] list, OutputStream out) throws IOException {
         out.write('l');
         out.write('l');
-        for (int x = 0; x < list.length; x++) {
-            encodeString(list[x], out);
+        for (String aList : list) {
+            encodeString(aList, out);
         }
         out.write('e');
         out.write('e');
     }
 
-    public void encodeBytes(byte[] bytes, OutputStream out) throws IOException {
+    private void encodeBytes(byte[] bytes, OutputStream out) throws IOException {
         out.write(Integer.toString(bytes.length).getBytes("US-ASCII"));
         out.write(':');
         out.write(bytes);
     }
 
-    public void encodeString(String str, OutputStream out) throws IOException {
+    private void encodeString(String str, OutputStream out) throws IOException {
         encodeBytes(str.getBytes("UTF-8"), out);
     }
 

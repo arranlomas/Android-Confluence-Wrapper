@@ -1,5 +1,7 @@
 package com.schiwfty.torrentwrapper.repositories
 
+import android.Manifest
+import android.app.Activity
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Context.DOWNLOAD_SERVICE
@@ -14,12 +16,14 @@ import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.persistence.ITorrentPersistence
 import com.schiwfty.torrentwrapper.retrofit.ConfluenceApi
 import com.schiwfty.torrentwrapper.utils.*
+import com.tbruyelle.rxpermissions.RxPermissions
 import okhttp3.ResponseBody
 import org.apache.commons.io.IOUtils
 import rx.Observable
 import rx.subjects.PublishSubject
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileNotFoundException
 
 
 /**
@@ -175,7 +179,36 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
        return torrentPersistence.getDownloadingFile(hash, path)
     }
 
-    override fun addTorrentToClient(file: File) {
+    override fun addFileToClient(activity: Activity, file: File): PublishSubject<TorrentInfo> {
+        val resultSubject = PublishSubject.create<TorrentInfo>()
+        RxPermissions(activity)
+                .request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                .subscribe({
+                    if(it){
+                        val (hash, torrentFile) = file.createTorrent()
+                        val inputStream = FileInputStream(torrentFile)
+                        val bytes = IOUtils.toByteArray(inputStream)
+//                        val torrentFile = File(Confluence.workingDir, file.name)
 
+                        Log.v("hash", hash)
+                        val  torrentObject = torrentFile.getAsTorrentObject()
+                        confluenceApi.postTorrent(hash, bytes)
+                                .composeIo()
+                                .map { resultSubject.onNext(torrentObject)  }
+                                .subscribe ({
+                                    resultSubject.onCompleted()
+                                },{
+                                    resultSubject.onError(it)
+                                })
+                    }else{
+                        resultSubject.onError(IllegalStateException("Permissions required to add a file"))
+                        Log.v("Permission Denied", "Permission required to add file to the client")
+                    }
+                },{
+                    resultSubject.onError(it)
+                    it.printStackTrace()
+                })
+        return resultSubject
     }
+
 }

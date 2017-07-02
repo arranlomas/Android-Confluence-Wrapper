@@ -18,7 +18,7 @@ class SampleActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sample)
-        val directoryPath = Environment.getExternalStorageDirectory().path + File.separator + "wrapper-test"
+        val directoryPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path + File.separator + "wrapper-test"
         Confluence.install(applicationContext, directoryPath)
         Confluence.start(this, R.mipmap.ic_launcher)
                 .subscribe {
@@ -80,6 +80,16 @@ class SampleActivity : AppCompatActivity() {
                     .subscribe {
                         it?.primaryKey.let { text_view.text = "primary key = $it" }
                     }
+        }
+
+        add_torrent.setOnClickListener {
+            val testFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/test.jpg" )
+            torrentRepository.addFileToClient(this, testFile)
+                    .subscribe ({
+                        text_view.text = "Torrent name ${it.name}   files: ${it.fileList}"
+                    },{
+                        text_view.text = it.localizedMessage
+                    })
 
         }
 
