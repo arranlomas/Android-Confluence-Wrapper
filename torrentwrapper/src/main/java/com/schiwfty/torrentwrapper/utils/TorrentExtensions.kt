@@ -5,31 +5,36 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.webkit.MimeTypeMap
+import com.schiwfty.torrentwrapper.bencoding.TorrentCreator
 import com.schiwfty.torrentwrapper.bencoding.TorrentParser
 import com.schiwfty.torrentwrapper.confluence.Confluence
+import com.schiwfty.torrentwrapper.confluence.Confluence.announceList
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
-import java.io.File
+import java.io.*
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.security.MessageDigest
 import java.util.*
 import java.util.regex.Pattern
+import kotlin.experimental.and
+import kotlin.experimental.or
 
 
 /**
  * Created by arran on 30/04/2017.
  */
-fun File.getAsTorrent(): TorrentInfo? {
-    if (!isValidTorrentFile())return null
+fun File.getAsTorrentObject(): TorrentInfo? {
+    if (!isValidTorrentFile()) return null
     val torrentInfo = TorrentParser.parseTorrent(this.absolutePath)
     if (torrentInfo?.totalSize == 0L && torrentInfo.fileList.size > 1) {
         torrentInfo.fileList.forEach {
             torrentInfo.totalSize += it.fileLength ?: 0
         }
     }
-    if(torrentInfo?.singleFileTorrent ?: false){
-        if(torrentInfo?.totalSize != null) {
+    if (torrentInfo?.singleFileTorrent ?: false) {
+        if (torrentInfo?.totalSize != null) {
             val paths: LinkedList<String> = LinkedList(listOf(torrentInfo.name))
             val torrentFile = TorrentFile(
                     torrentInfo.totalSize,
@@ -85,7 +90,7 @@ fun String.findTrackersFromMagnet(): List<String> {
     return trackerList.toList()
 }
 
-fun TorrentFile.openFile(context: Context, torrentRepository: ITorrentRepository, notActivityMethod: () -> Unit){
+fun TorrentFile.openFile(context: Context, torrentRepository: ITorrentRepository, notActivityMethod: () -> Unit) {
     torrentRepository.addTorrentFileToPersistence(this)
     val url = Confluence.fullUrl + "/data?ih=" + torrentHash + "&path=" + URLEncoder.encode(getFullPath(), "UTF-8")
     val file = File(getFullPath())
@@ -98,15 +103,15 @@ fun TorrentFile.openFile(context: Context, torrentRepository: ITorrentRepository
     val intent = Intent(Intent.ACTION_VIEW)
 
     intent.setDataAndType(Uri.parse(url), type)
-    try{
+    try {
         context.startActivity(intent)
-    }catch (exception: Exception){
+    } catch (exception: Exception) {
         notActivityMethod.invoke()
     }
 
 }
 
-fun TorrentFile.getFullPath(): String{
+fun TorrentFile.getFullPath(): String {
     var path = ""
     fileDirs?.forEachIndexed { index, s ->
         if (index == (fileDirs.size - 1))
@@ -117,7 +122,7 @@ fun TorrentFile.getFullPath(): String{
     return path
 }
 
-fun LinkedList<String>.concatStrings(): String{
+fun LinkedList<String>.concatStrings(): String {
     var path = ""
     forEachIndexed { index, s ->
         if (index == (size - 1))
@@ -128,41 +133,99 @@ fun LinkedList<String>.concatStrings(): String{
     return path
 }
 
-fun File.isValidTorrentFile():Boolean{
-    if(isDirectory) return false
+fun File.isValidTorrentFile(): Boolean {
+    if (isDirectory) return false
     if (!exists()) return false
-    if(!canRead()) return false
+    if (!canRead()) return false
     if (!path.endsWith(".torrent")) return false
     return true
 }
 
-fun File.copyToTorrentDirectory():Boolean{
-    if(!isValidTorrentFile()) return false
+fun File.copyToTorrentDirectory(): Boolean {
+    if (!isValidTorrentFile()) return false
     if (parentFile.absolutePath.equals(Confluence.torrentInfoStorage)) return true
     val testFile = File(Confluence.torrentInfoStorage.absolutePath + File.separator + name)
-    if(testFile.exists())return true
+    if (testFile.exists()) return true
     val result = copyTo(File(Confluence.torrentInfoStorage.absolutePath, name), true)
     return result.isValidTorrentFile()
 }
 
-fun TorrentFile.getShareableDataUrl(): String{
-   return "${Confluence.fullUrl}/data?ih=$torrentHash&path=${getFullPath()}"
+fun TorrentFile.getShareableDataUrl(): String {
+    return "${Confluence.fullUrl}/data?ih=$torrentHash&path=${getFullPath()}"
 }
 
-fun TorrentFile.getDownloadableUrl(): String{
+fun TorrentFile.getDownloadableUrl(): String {
     return "http://127.0.0.1:${Confluence.daemonPort}/data?ih=$torrentHash&path=${getFullPath()}"
 }
 
-fun TorrentFile.getMimeType(): String{
+fun TorrentFile.getMimeType(): String {
     val file = File(getFullPath())
     return MimeTypeMap.getSingleton().getMimeTypeFromExtension(file.extension)
 }
 
-fun TorrentFile.canCast(): Boolean{
+fun TorrentFile.canCast(): Boolean {
     val splitMime = getMimeType().split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
     val fileType = splitMime[0].toLowerCase()
     val format = splitMime[1].toLowerCase()
-    if (fileType == "video" || fileType == "audio"){
+    if (fileType == "video" || fileType == "audio") {
         return MimeConstants.chromecastSet.contains(format)
-    }else return false
+    } else return false
+}
+
+fun File.createTorrent(outputFile: File): Pair<String, File> {
+    val torrentCreator = TorrentCreator()
+    val pieceLength = 512 * 1024
+    val pieces = torrentCreator.hashPieces(this, pieceLength)
+
+    val info = HashMap<String, Any>()
+    info.put("name", this.name)
+    info.put("length", this.length())
+    info.put("piece length", pieceLength)
+    info.put("pieces", pieces)
+    val metainfo = HashMap<String, Any>()
+    metainfo.put("announce-list", announceList)
+    metainfo.put("info", info)
+    val out = FileOutputStream(outputFile)
+    torrentCreator.encodeMap(metainfo, out)
+    out.close()
+    val infoHash = outputFile.hashMetaInfo()
+    return Pair(infoHash, outputFile)
+}
+
+fun File.hashMetaInfo(): String {
+    val sha1 = MessageDigest.getInstance("SHA-1")
+    var input: InputStream? = null
+
+    try {
+        input = FileInputStream(this)
+        val builder = StringBuilder()
+        while (!builder.toString().endsWith("4:info")) {
+            builder.append(input.read().toChar()) // It's ASCII anyway.
+        }
+        val output = ByteArrayOutputStream()
+        var data: Int = input.read()
+        while (data > -1) {
+            output.write(data)
+            data = input.read()
+        }
+        sha1.update(output.toByteArray(), 0, output.size() - 1)
+    } finally {
+        if (input != null)
+            try {
+                input.close()
+            } catch (ignore: IOException) {
+                ignore.printStackTrace()
+            }
+    }
+
+    val hash = sha1.digest()
+
+    val sb = StringBuffer()
+
+    (0..hash.size).map {
+        val hex = Integer.toHexString(hash[it].toInt() and 0xff or 0x100).substring(1, 3)
+        sb.append(hex)
+    }
+
+    return sb.toString()
 }

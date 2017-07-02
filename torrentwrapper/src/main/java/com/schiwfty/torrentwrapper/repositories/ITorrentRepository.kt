@@ -10,8 +10,6 @@ import rx.Observable
 import java.io.File
 import rx.subjects.PublishSubject
 
-
-
 /**
  * Created by arran on 29/04/2017.
  */
@@ -33,6 +31,8 @@ interface ITorrentRepository {
     fun getTorrentInfo(hash: String): Observable<TorrentInfo?>
 
     fun startFileDownloading(torrentFile: TorrentFile, context: Context, wifiOnly: Boolean)
+
+    fun addTorrentToClient(file: File)
 
     //PERSISTENCE
     //adds a torrent file to the realm database

@@ -81,7 +81,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                 .composeIo()
                 .map {
                     val file: File = File(torrentInfoStorage, "$hash.torrent")
-                    val torrentInfo = file.getAsTorrent()
+                    val torrentInfo = file.getAsTorrentObject()
                     torrentInfo
                 }
     }
@@ -89,7 +89,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     override fun getTorrentInfo(hash: String): Observable<TorrentInfo?> {
         val file: File = File(torrentInfoStorage, "$hash.torrent")
         if (file.isValidTorrentFile()) {
-            val torrentInfo = file.getAsTorrent()
+            val torrentInfo = file.getAsTorrentObject()
             return Observable.just(torrentInfo)
         } else return downloadTorrentInfo(hash)
     }
@@ -99,7 +99,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
             val torrentList = mutableListOf<TorrentInfo>()
             torrentInfoStorage.walkTopDown().iterator().forEach {
                 if (it.isValidTorrentFile()) {
-                    val torrentInfo = it.getAsTorrent()
+                    val torrentInfo = it.getAsTorrentObject()
                     if (torrentInfo != null) torrentList.add(torrentInfo)
                 }
             }
@@ -173,5 +173,9 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
 
     override fun getTorrentFileFromPersistence(hash: String, path: String): TorrentFile? {
        return torrentPersistence.getDownloadingFile(hash, path)
+    }
+
+    override fun addTorrentToClient(file: File) {
+
     }
 }

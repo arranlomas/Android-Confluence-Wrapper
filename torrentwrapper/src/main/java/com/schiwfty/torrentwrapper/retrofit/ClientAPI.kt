@@ -30,5 +30,4 @@ internal interface ClientAPI {
 
     @GET("/fileState")
     fun getFileState(@Query("ih") info_hash: String, @Query("path") file_path: String): Observable<List<FileStatePiece>>
-
 }
