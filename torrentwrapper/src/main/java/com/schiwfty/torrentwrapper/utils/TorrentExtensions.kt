@@ -228,3 +228,15 @@ private fun File.hashMetaInfo(): String {
 
     return sb.toString()
 }
+
+fun TorrentInfo.createMagnet(): String{
+    val sb = StringBuilder("magnet:?xt=urn:btih:")
+            .append(info_hash)
+            .append("&dn=")
+            .append(name)
+    for (tracker in announceList) {
+        sb.append("&tr=")
+                .append(tracker)
+    }
+    return sb.toString()
+}
