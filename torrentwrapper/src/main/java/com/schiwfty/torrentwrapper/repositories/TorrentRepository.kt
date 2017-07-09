@@ -180,6 +180,8 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     }
 
     override fun addFileToClient(activity: Activity, file: File): PublishSubject<TorrentInfo> {
+        val confluenceFile = File(Confluence.workingDir.absolutePath, file.name)
+        if(!file.exists()) file.copyTo(confluenceFile)
         val resultSubject = PublishSubject.create<TorrentInfo>()
         RxPermissions(activity)
                 .request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)

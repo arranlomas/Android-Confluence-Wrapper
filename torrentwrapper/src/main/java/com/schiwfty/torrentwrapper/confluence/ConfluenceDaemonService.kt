@@ -32,8 +32,8 @@ class ConfluenceDaemonService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Thread{
-            trickl.Trickl.androidMain(Confluence.workingDir.absolutePath)
+        Thread {
+            trickl.Trickl.androidMain(Confluence.workingDir.absolutePath, true)
         }.start()
         val notificationResourceID = intent?.getIntExtra(ARG_NOTIFICATION_ICON_RES, -1) ?: -1
         val permissionCheck = ContextCompat.checkSelfPermission(this,

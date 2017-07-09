@@ -84,7 +84,7 @@ class SampleActivity : AppCompatActivity() {
         }
 
         add_torrent.setOnClickListener {
-            val testFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/test.jpg" )
+            val testFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/ash.jpg" )
             torrentRepository.addFileToClient(this, testFile)
                     .subscribe ({
                         text_view.text = "Torrent name ${it.name}\nfiles: ${it.fileList}\n magnet: ${it.createMagnet()}"
