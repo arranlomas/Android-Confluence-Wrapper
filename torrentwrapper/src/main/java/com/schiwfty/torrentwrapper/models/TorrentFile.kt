@@ -10,7 +10,7 @@ data class TorrentFile(
         @SerializedName("file_length")
         val fileLength: Long? = null,
 
-        @SerializedName("file_firs")
+        @SerializedName("file_dirs")
         val fileDirs: List<String>? = null,
 
         @SerializedName("torrent_hash")
