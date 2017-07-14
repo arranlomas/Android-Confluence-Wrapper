@@ -7,7 +7,7 @@ import android.util.Log
 import android.view.View
 import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
-import com.schiwfty.torrentwrapper.utils.createMagnet
+import com.schiwfty.torrentwrapper.utils.getMagnetLink
 import com.schiwfty.torrentwrapper.utils.getFullPath
 import com.schiwfty.torrentwrapper.utils.openFile
 import kotlinx.android.synthetic.main.activity_sample.*
@@ -87,7 +87,7 @@ class SampleActivity : AppCompatActivity() {
             val testFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/ash.jpg" )
             torrentRepository.addFileToClient(this, testFile)
                     .subscribe ({
-                        text_view.text = "Torrent name ${it.name}\nfiles: ${it.fileList}\n magnet: ${it.createMagnet()}"
+                        text_view.text = "Torrent name ${it.name}\nfiles: ${it.fileList}\n magnet: ${it.getMagnetLink()}"
                     },{
                         text_view.text = it.localizedMessage
                     })

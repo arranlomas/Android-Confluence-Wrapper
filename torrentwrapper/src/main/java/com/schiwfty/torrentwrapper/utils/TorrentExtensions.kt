@@ -229,7 +229,7 @@ private fun File.hashMetaInfo(): String {
     return sb.toString()
 }
 
-fun TorrentInfo.createMagnet(): String{
+fun TorrentInfo.getMagnetLink(): String{
     val sb = StringBuilder("magnet:?xt=urn:btih:")
             .append(info_hash)
             .append("&dn=")
