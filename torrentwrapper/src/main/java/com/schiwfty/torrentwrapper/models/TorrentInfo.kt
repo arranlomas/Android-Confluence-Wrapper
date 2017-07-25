@@ -2,6 +2,8 @@ package com.schiwfty.torrentwrapper.models
 
 import com.google.gson.annotations.SerializedName
 import java.util.*
+import com.google.firebase.database.Exclude
+
 
 /**
  * Created by arran on 30/04/2017.
@@ -14,10 +16,10 @@ data class TorrentInfo constructor(var name: String) {
     var pieceLength: Long = 0
 
     @SerializedName("pieces_blob")
-    var piecesBlob: ByteArray? = null
+    @get:Exclude var piecesBlob: ByteArray? = null
 
     @SerializedName("pieces")
-    var pieces: List<String> = emptyList()
+    @get:Exclude var pieces: List<String> = emptyList()
 
     @SerializedName("single_file_torrent")
     var singleFileTorrent: Boolean = false
@@ -40,6 +42,6 @@ data class TorrentInfo constructor(var name: String) {
     @SerializedName("announce_list")
     var announceList: List<String> = emptyList()
 
-    @SerializedName("info_has")
+    @SerializedName("info_hash")
     var info_hash: String = ""
 }
