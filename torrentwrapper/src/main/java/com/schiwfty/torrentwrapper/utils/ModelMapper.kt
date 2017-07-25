@@ -9,12 +9,11 @@ import io.realm.RealmList
  * Created by arran on 16/05/2017.
  */
 internal fun RealmTorrentFile.mapToModel(): TorrentFile {
-    val tf = TorrentFile(
-            fileLength,
-            fileDirs?.mapToList(),
-            torrentHash,
-            primaryKey
-    )
+    val tf = TorrentFile()
+    tf.fileLength = fileLength
+    tf.fileDirs = fileDirs?.mapToList()
+    tf.torrentHash = torrentHash
+    tf.primaryKey = primaryKey
     tf.parentTorrentName = parentTorrentName
     tf.percComplete = percComplete
     return tf

@@ -34,12 +34,11 @@ fun File.getAsTorrentObject(): TorrentInfo? {
     if (torrentInfo?.singleFileTorrent ?: false) {
         if (torrentInfo?.totalSize != null) {
             val paths: LinkedList<String> = LinkedList(listOf(torrentInfo.name))
-            val torrentFile = TorrentFile(
-                    torrentInfo.totalSize,
-                    paths,
-                    torrentInfo.info_hash,
-                    "${torrentInfo.info_hash}${paths.concatStrings()}"
-            )
+            val torrentFile = TorrentFile()
+            torrentFile.fileLength = torrentInfo.totalSize
+            torrentFile.fileDirs = paths
+            torrentFile.torrentHash = torrentInfo.info_hash
+            torrentFile.primaryKey = "${torrentInfo.info_hash}${paths.concatStrings()}"
             Log.v("generated primaryKey:", "Torrent: ${torrentInfo.name}   File: ${paths.last}     primaryKey: ${torrentInfo.info_hash}${paths.concatStrings()}")
             torrentInfo.fileList = listOf(torrentFile)
         }
@@ -111,11 +110,14 @@ fun TorrentFile.openFile(context: Context, torrentRepository: ITorrentRepository
 
 fun TorrentFile.getFullPath(): String {
     var path = ""
-    fileDirs?.forEachIndexed { index, s ->
-        if (index == (fileDirs.size - 1))
-            path += s
-        else
-            path += "$s/"
+    fileDirs?.let {
+        val dirs = it
+        it.forEachIndexed { index, s ->
+            if (index == (dirs.size - 1))
+                path += s
+            else
+                path += "$s/"
+        }
     }
     return path
 }
@@ -221,7 +223,7 @@ private fun File.hashMetaInfo(): String {
 
     val sb = StringBuffer()
 
-    (0..hash.size-1).map {
+    (0..hash.size - 1).map {
         val hex = Integer.toHexString(hash[it].toInt() and 0xff or 0x100).substring(1, 3)
         sb.append(hex)
     }
@@ -229,7 +231,7 @@ private fun File.hashMetaInfo(): String {
     return sb.toString()
 }
 
-fun TorrentInfo.getMagnetLink(): String{
+fun TorrentInfo.getMagnetLink(): String {
     val sb = StringBuilder("magnet:?xt=urn:btih:")
             .append(info_hash)
             .append("&dn=")

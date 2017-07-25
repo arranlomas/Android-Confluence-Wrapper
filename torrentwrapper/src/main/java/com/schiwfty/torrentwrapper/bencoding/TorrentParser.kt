@@ -40,7 +40,8 @@ object TorrentParser {
             val torrentDictionary = o
             val infoDictionary = parseInfoDictionary(torrentDictionary) ?: throw IllegalStateException("info dictionary is null")
 
-            val t = TorrentInfo(parseTorrentName(infoDictionary))
+            val t = TorrentInfo()
+            t.name = parseTorrentName(infoDictionary)
 
             ///////////////////////////////////
             //// OBLIGATED FIELDS /////////////
@@ -229,7 +230,11 @@ object TorrentParser {
                     while (filePathsIterator.hasNext())
                         paths.add(filePathsIterator.next().toString())
 
-                    val tf = TorrentFile(fileLength.value, paths, hash, "$hash${paths.concatStrings()}")
+                    val tf = TorrentFile()
+                    tf.fileLength = fileLength.value
+                    tf.fileDirs = paths
+                    tf.torrentHash = hash
+                    tf.primaryKey = "$hash${paths.concatStrings()}"
                     Log.v("generated primaryKey:", "Torrent: $torrentName   File: ${paths.last}     primaryKey: $hash${paths.concatStrings()}")
                     tf.parentTorrentName = torrentName
                     fileList.add(tf)

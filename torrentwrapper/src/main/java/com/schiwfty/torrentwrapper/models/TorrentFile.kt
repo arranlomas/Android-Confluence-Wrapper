@@ -6,20 +6,21 @@ import io.realm.annotations.PrimaryKey
 /**
  * Created by arran on 30/04/2017.
  */
-data class TorrentFile(
-        @SerializedName("file_length")
-        val fileLength: Long? = null,
+class TorrentFile {
 
-        @SerializedName("file_dirs")
-        val fileDirs: List<String>? = null,
+    @SerializedName("file_length")
+    var fileLength: Long? = null
 
-        @SerializedName("torrent_hash")
-        val torrentHash: String,
+    @SerializedName("file_dirs")
+    var fileDirs: List<String>? = null
 
-        @PrimaryKey
-        @SerializedName("primary_key")
-        val primaryKey: String
-) {
+    @SerializedName("torrent_hash")
+    var torrentHash: String = ""
+
+    @PrimaryKey
+    @SerializedName("primary_key")
+    var primaryKey: String = ""
+
     @SerializedName("perc_completed")
     var percComplete: Int = 0
 

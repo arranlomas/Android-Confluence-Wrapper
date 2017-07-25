@@ -8,7 +8,10 @@ import com.google.firebase.database.Exclude
 /**
  * Created by arran on 30/04/2017.
  */
-data class TorrentInfo constructor(var name: String) {
+class TorrentInfo {
+
+    var name: String = ""
+
     @SerializedName("announce")
     var announce: String = ""
 
