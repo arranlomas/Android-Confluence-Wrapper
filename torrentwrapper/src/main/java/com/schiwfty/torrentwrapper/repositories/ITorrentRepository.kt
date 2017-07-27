@@ -15,7 +15,7 @@ import rx.subjects.PublishSubject
  * Created by arran on 29/04/2017.
  */
 interface ITorrentRepository {
-    val torrentFileProgressSource: PublishSubject<Boolean>
+    val torrentFileProgressSource: PublishSubject<List<TorrentFile>>
     val torrentFileDeleteListener: PublishSubject<TorrentFile>
     val torrentInfoDeleteListener: PublishSubject<TorrentInfo>
 

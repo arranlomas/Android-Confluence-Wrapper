@@ -23,7 +23,6 @@ import rx.Observable
 import rx.subjects.PublishSubject
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileNotFoundException
 
 
 /**
@@ -33,45 +32,41 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
 
     override val torrentInfoDeleteListener: PublishSubject<TorrentInfo> = PublishSubject.create<TorrentInfo>()
     override val torrentFileDeleteListener: PublishSubject<TorrentFile> = PublishSubject.create<TorrentFile>()
-    override val torrentFileProgressSource: PublishSubject<Boolean> = PublishSubject.create<Boolean>()
+    override val torrentFileProgressSource: PublishSubject<List<TorrentFile>> = PublishSubject.create<List<TorrentFile>>()
 
     private var statusUpdateRunning = true
 
     private val statusThread = Thread({
         while (statusUpdateRunning) {
-            val files = torrentPersistence.getDownloadFiles()
-            var percentagesCompleted = 0
-            files.forEach {
-                //TODO - improve to just add a list of files that were updated to the publish subject
-                getFileState(it)
-                        .subscribe({
-                            val (torrentFile, pieces) = it
-                            var totalFileSize: Long = 0
-                            var totalCompletedSize: Long = 0
-                            pieces.forEach {
-                                totalFileSize += it.bytes
-                                if (it.complete) {
-                                    totalCompletedSize += it.bytes
-                                }
-                            }
-                            val percCompleted = (totalCompletedSize.toDouble() / totalFileSize.toDouble()) * 100.0
-                            torrentFile.percComplete = Math.round(percCompleted).toInt()
-                            torrentPersistence.saveTorrentFile(torrentFile)
-                            percentagesCompleted++
-                            if (percentagesCompleted == files.size) torrentFileProgressSource.onNext(true)
-                            Log.v("HASH", "${torrentFile.torrentHash} PATH: ${torrentFile.getFullPath()} PERC: $percCompleted")
-                            Log.v("-----------", "-----------------------")
-                        }, {
-                            it.printStackTrace()
-                        })
+            val fileStateObservablesList = mutableListOf<Observable<Pair<TorrentFile, List<FileStatePiece>>>>()
+            torrentPersistence.getDownloadFiles().forEach {
+                fileStateObservablesList.add(getFileState(it))
             }
-            Thread.sleep(2000)
+            Observable.zip(fileStateObservablesList, { result ->
+                result.map { it as Pair<TorrentFile, List<FileStatePiece>> }
+                        .toMutableList()
+            })
+                    .flatMapIterable { it }
+                    .map {
+                        val (torrentFile, pieces) = it
+                        torrentFile.updatePercentage(pieces)
+                        torrentPersistence.saveTorrentFile(torrentFile)
+                        torrentFile
+                    }
+                    .toList()
+                    .subscribe({
+                        torrentFileProgressSource.onNext(it)
+                        Log.v("filestateobservableList", "returned: ${it.size}")
+                    }, {
+                        it.printStackTrace()
+                    })
+            Thread.sleep(1000)
         }
     })
 
     init {
         statusThread.start()
-        torrentPersistence.torrentFileDeleted =  { torrentFile -> torrentFileDeleteListener.onNext(torrentFile) }
+        torrentPersistence.torrentFileDeleted = { torrentFile -> torrentFileDeleteListener.onNext(torrentFile) }
     }
 
     override fun getStatus(): Observable<ConfluenceInfo> {
@@ -137,6 +132,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
 
     override fun getDownloadingFilesFromPersistence(): Observable<List<TorrentFile>> {
         return Observable.just(torrentPersistence.getDownloadFiles())
+                .composeIo()
     }
 
     override fun deleteTorrentInfoFromStorage(torrentInfo: TorrentInfo): Boolean {
@@ -176,38 +172,38 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     }
 
     override fun getTorrentFileFromPersistence(hash: String, path: String): TorrentFile? {
-       return torrentPersistence.getDownloadingFile(hash, path)
+        return torrentPersistence.getDownloadingFile(hash, path)
     }
 
     override fun addFileToClient(activity: Activity, file: File): PublishSubject<TorrentInfo> {
         val confluenceFile = File(Confluence.workingDir.absolutePath, file.name)
-        if(file.exists() && !confluenceFile.exists()) file.copyTo(confluenceFile)
+        if (file.exists() && !confluenceFile.exists()) file.copyTo(confluenceFile)
         Log.v("copying file", "file: ${file.name} working directory: ${Confluence.workingDir.absolutePath}")
         val resultSubject = PublishSubject.create<TorrentInfo>()
         RxPermissions(activity)
                 .request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .subscribe({
-                    if(it){
+                    if (it) {
                         val (hash, torrentFile) = file.createTorrent()
                         val inputStream = FileInputStream(torrentFile)
                         val bytes = IOUtils.toByteArray(inputStream)
 //                        val torrentFile = File(Confluence.workingDir, file.name)
 
                         Log.v("hash", hash)
-                        val  torrentObject = torrentFile.getAsTorrentObject()
+                        val torrentObject = torrentFile.getAsTorrentObject()
                         confluenceApi.postTorrent(hash, bytes)
                                 .composeIo()
-                                .map { resultSubject.onNext(torrentObject)  }
-                                .subscribe ({
+                                .map { resultSubject.onNext(torrentObject) }
+                                .subscribe({
                                     resultSubject.onCompleted()
-                                },{
+                                }, {
                                     resultSubject.onError(it)
                                 })
-                    }else{
+                    } else {
                         resultSubject.onError(IllegalStateException("Permissions required to add a file"))
                         Log.v("Permission Denied", "Permission required to add file to the client")
                     }
-                },{
+                }, {
                     resultSubject.onError(it)
                     it.printStackTrace()
                 })

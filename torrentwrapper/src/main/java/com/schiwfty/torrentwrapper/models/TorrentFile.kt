@@ -26,4 +26,17 @@ class TorrentFile {
 
     @SerializedName("parent_torrent_name")
     var parentTorrentName: String = ""
+
+    fun updatePercentage(pieces: List<FileStatePiece>){
+        var totalFileSize: Long = 0
+        var totalCompletedSize: Long = 0
+        pieces.forEach {
+            totalFileSize += it.bytes
+            if (it.complete) {
+                totalCompletedSize += it.bytes
+            }
+        }
+        val percCompleted = (totalCompletedSize.toDouble() / totalFileSize.toDouble()) * 100.0
+        percComplete = Math.round(percCompleted).toInt()
+    }
 }
