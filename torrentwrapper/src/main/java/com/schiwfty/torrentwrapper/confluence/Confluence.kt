@@ -35,13 +35,13 @@ object Confluence {
     lateinit var torrentRepository: ITorrentRepository
     lateinit var torrentRepositoryComponent: TorrentRepositoryComponent
 
-    enum class ConfluenceState{
+    enum class ConfluenceState {
         STARTED,
         WAITING,
         STOPPED
     }
 
-    fun install(context: Context, workingDirectoryPath: String){
+    fun install(context: Context, workingDirectoryPath: String) {
         Realm.init(context)
         Stetho.initialize(
                 Stetho.newInitializerBuilder(context)
@@ -61,16 +61,26 @@ object Confluence {
     }
 
     var announceList: Array<String> = arrayOf(
-            "http://182.176.139.129:6969/announce",
-            "http://atrack.pow7.com/announce",
-            "http://p4p.arenabg.com:1337/announce",
-            "http://tracker.kicks-ass.net/announce",
-            "http://tracker.thepiratebay.org/announce",
-            "http://bttracker.crunchbanglinux.org:6969/announce",
-            "http://tracker.aletorrenty.pl:2710/announce",
-            "http://tracker.tfile.me/announce",
-            "http://tracker.trackerfix.com/announce")
-
+            "udp://tracker.pirateparty.gr:6969/announce",
+            "udp://tracker.coppersurfer.tk:6969/announce",
+            "udp://tracker.leechers-paradise.org:6969/announce",
+            "udp://9.rarbg.com:2710/announce",
+            "udp://p4p.arenabg.com:1337/announce",
+            "http://asnet.pw:2710/announce",
+            "http://tracker.opentrackr.org:1337/announce",
+            "udp://tracker.opentrackr.org:1337/announce",
+            "udp://public.popcorn-tracker.org:6969/announce",
+            "udp://tracker.internetwarriors.net:1337/announce",
+            "udp://peerfect.org:6969/announce",
+            "udp://open.stealth.si:80/announce",
+            "udp://open.facedatabg.net:6969/announce",
+            "udp://mgtracker.org:6969/announce",
+            "http://91.218.230.81:6969/announce",
+            "udp://tracker.mg64.net:6969/announce",
+            "udp://tracker.dler.org:6969/announce",
+            "udp://leecherhaven.zapto.org:6969/announce",
+            "udp://ipv4.tracker.harry.lu:80/announce",
+            "http://tracker.mg64.net:6881/announce ")
 
     private fun getAvailablePort(): Int {
         var s: ServerSocket? = null
@@ -93,9 +103,10 @@ object Confluence {
         return streamPort
     }
 
-    fun start(activity: Activity, notificationResourceId: Int): PublishSubject<ConfluenceState>{
+    fun start(activity: Activity, notificationResourceId: Int): PublishSubject<ConfluenceState> {
         return start(activity, notificationResourceId, {})
     }
+
     fun start(activity: Activity, notificationResourceId: Int, onPermissionDenied: () -> Unit): PublishSubject<ConfluenceState> {
         RxPermissions(activity)
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)

@@ -1,5 +1,6 @@
 package com.schiwfty.torrentwrapper.models
 
+import android.util.Log
 import com.google.gson.annotations.SerializedName
 import io.realm.annotations.PrimaryKey
 
@@ -38,5 +39,6 @@ class TorrentFile {
         }
         val percCompleted = (totalCompletedSize.toDouble() / totalFileSize.toDouble()) * 100.0
         percComplete = Math.round(percCompleted).toInt()
+        Log.v("$primaryKey perc", "UPDATED: $percCompleted%")
     }
 }
