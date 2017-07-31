@@ -5,7 +5,6 @@ package com.schiwfty.torrentwrapper.retrofit
  */
 
 
-import com.schiwfty.torrentwrapper.models.ConfluenceInfo
 import com.schiwfty.torrentwrapper.models.FileStatePiece
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -22,7 +21,7 @@ internal interface ClientAPI {
     fun getInfo(@Query("ih") info_hash: String): Observable<ResponseBody>
 
     @GET("/status")
-    fun getStatus(): Observable<ConfluenceInfo>
+    fun getStatus(): Observable<String>
 
     @GET("/data")
     @Streaming

@@ -62,6 +62,11 @@
                 android:id="@+id/add_torrent"
                 android:text="add a torrent file"/>
 
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/post_torrent_info"
+                android:text="create torrent file from torrentInfo object"/>
 
             <TextView
                 android:id="@+id/text_view"

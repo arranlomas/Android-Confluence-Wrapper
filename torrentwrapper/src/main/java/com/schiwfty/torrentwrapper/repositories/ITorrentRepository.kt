@@ -20,7 +20,7 @@ interface ITorrentRepository {
     val torrentInfoDeleteListener: PublishSubject<TorrentInfo>
 
     //API
-    fun getStatus(): Observable<ConfluenceInfo>
+    fun getStatus(): Observable<String>
 
     fun postTorrentFile(hash: String, file: File): Observable<ResponseBody>
 

@@ -22,7 +22,7 @@ class TorrentInfo {
     @get:Exclude var piecesBlob: ByteArray? = null
 
     @SerializedName("pieces")
-    @get:Exclude var pieces: List<String> = emptyList()
+    @get:Exclude var pieces: List<String>? = null
 
     @SerializedName("single_file_torrent")
     var singleFileTorrent: Boolean = false

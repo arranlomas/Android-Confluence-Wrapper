@@ -1,9 +1,7 @@
 package com.schiwfty.torrentwrapper.retrofit
 
 
-import com.schiwfty.torrentwrapper.models.ConfluenceInfo
 import com.schiwfty.torrentwrapper.models.FileStatePiece
-import com.schiwfty.torrentwrapper.retrofit.ClientAPI
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -26,7 +24,7 @@ internal class ConfluenceApi(private val clientAPI: ClientAPI) {
         return clientAPI.postTorrent(hash, requestBody)
     }
 
-    val getStatus: Observable<ConfluenceInfo>
+    val getStatus: Observable<String>
         get() = clientAPI.getStatus()
 
     fun getFileData(hash: String, path: String): Observable<ResponseBody> {

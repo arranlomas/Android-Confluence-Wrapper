@@ -6,9 +6,11 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
 import com.schiwfty.torrentwrapper.confluence.Confluence
+import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
-import com.schiwfty.torrentwrapper.utils.getMagnetLink
+import com.schiwfty.torrentwrapper.utils.generateTorrentFile
 import com.schiwfty.torrentwrapper.utils.getFullPath
+import com.schiwfty.torrentwrapper.utils.getMagnetLink
 import com.schiwfty.torrentwrapper.utils.openFile
 import kotlinx.android.synthetic.main.activity_sample.*
 import java.io.File
@@ -84,17 +86,32 @@ class SampleActivity : AppCompatActivity() {
         }
 
         add_torrent.setOnClickListener {
-            val testFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/Cloudburst/Test.jpg" )
+            val testFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/Cloudburst/Test.jpg")
             torrentRepository.addFileToClient(this, testFile)
-                    .subscribe ({
+                    .subscribe({
                         text_view.text = "Torrent name ${it.name}\nfiles: ${it.fileList}\n magnet: ${it.getMagnetLink()}"
-                    },{
+                    }, {
                         text_view.text = it.localizedMessage
                     })
 
         }
 
-
-
+        post_torrent_info.setOnClickListener {
+            val torrentInfo = TorrentInfo()
+            torrentInfo.name = "arran test torrent"
+            torrentInfo.announce = "test announce"
+            torrentInfo.announceList = listOf("test_announce.com/announce")
+            torrentInfo.singleFileTorrent = true
+            torrentInfo.totalSize = 1000
+            torrentInfo.createdBy = "android Confluence wrapper"
+            val outputFile = File(Confluence.workingDir.absolutePath, "${torrentInfo.name}.torrent")
+            val (hash, file) = torrentInfo.generateTorrentFile(outputFile)
+            torrentRepository.postTorrentFile(hash, file.absoluteFile)
+                    .subscribe({
+                        text_view.text = "$hash torrent file created ${file.absolutePath}"
+                    }, {
+                        it.printStackTrace()
+                    })
+        }
     }
 }

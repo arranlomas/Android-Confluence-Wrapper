@@ -9,7 +9,6 @@ import android.net.Uri
 import android.util.Log
 import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.confluence.Confluence.torrentInfoStorage
-import com.schiwfty.torrentwrapper.models.ConfluenceInfo
 import com.schiwfty.torrentwrapper.models.FileStatePiece
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
@@ -69,10 +68,9 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
         torrentPersistence.torrentFileDeleted = { torrentFile -> torrentFileDeleteListener.onNext(torrentFile) }
     }
 
-    override fun getStatus(): Observable<ConfluenceInfo> {
+    override fun getStatus(): Observable<String> {
         return confluenceApi.getStatus
                 .composeIo()
-                .map { it }
     }
 
     override fun downloadTorrentInfo(hash: String): Observable<TorrentInfo?> {
@@ -184,7 +182,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                 .request(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .subscribe({
                     if (it) {
-                        val (hash, torrentFile) = file.createTorrent()
+                        val (hash, torrentFile) = file.createTorrent(File(Confluence.workingDir, "${file.nameWithoutExtension}.torrent"))
                         val inputStream = FileInputStream(torrentFile)
                         val bytes = IOUtils.toByteArray(inputStream)
 //                        val torrentFile = File(Confluence.workingDir, file.name)

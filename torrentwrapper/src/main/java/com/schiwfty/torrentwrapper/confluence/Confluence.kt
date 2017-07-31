@@ -138,6 +138,7 @@ object Confluence {
                     startedSubject.onNext(ConfluenceState.STARTED)
                 }, {
                     startedSubject.onNext(ConfluenceState.WAITING)
+                    it.printStackTrace()
                 }))
 
     }
