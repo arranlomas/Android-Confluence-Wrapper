@@ -230,14 +230,14 @@ private fun File.hashMetaInfo(): String {
     return sb.toString()
 }
 
-fun String.getTorrentFileWithTrackers(outputFile: File):  Pair<String, File>{
+fun String.getTorrentFileWithTrackers(outputFile: File, announceList: Array<String>):  Pair<String, File>{
     val torrentCreator = TorrentCreator()
 
     val info = HashMap<String, Any>()
     info.put("name", this)
     val metainfo = HashMap<String, Any>()
-    metainfo.put("announce", Confluence.announceList.first())
-    metainfo.put("announce-list", Confluence.announceList)
+    metainfo.put("announce", announceList.first())
+    metainfo.put("announce-list", announceList)
     metainfo.put("info", info)
     val out = FileOutputStream(outputFile)
     torrentCreator.encodeMap(metainfo, out)
