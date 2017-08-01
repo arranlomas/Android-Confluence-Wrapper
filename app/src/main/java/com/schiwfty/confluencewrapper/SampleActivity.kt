@@ -10,13 +10,15 @@ import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
 import com.schiwfty.torrentwrapper.utils.getFullPath
 import com.schiwfty.torrentwrapper.utils.getMagnetLink
-import com.schiwfty.torrentwrapper.utils.getTorrentFileWithTrackers
+import com.schiwfty.torrentwrapper.utils.generateTorrentFileWithTrackers
 import com.schiwfty.torrentwrapper.utils.openFile
 import kotlinx.android.synthetic.main.activity_sample.*
 import java.io.File
 
 class SampleActivity : AppCompatActivity() {
     lateinit var torrentRepository: ITorrentRepository
+    
+    val hashUnderTest = "2eb734e872a0ecf8929633b7aa4825c7f8c354f8"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +44,7 @@ class SampleActivity : AppCompatActivity() {
         }
 
         download_info.setOnClickListener {
-            torrentRepository.downloadTorrentInfo("b99f93d2df9472910941c4a315718fb0d1eff191")
+            torrentRepository.downloadTorrentInfo(hashUnderTest)
                     .subscribe {
                         text_view.text = it?.name
 
@@ -50,7 +52,7 @@ class SampleActivity : AppCompatActivity() {
         }
 
         get_info.setOnClickListener {
-            torrentRepository.getTorrentInfo("b99f93d2df9472910941c4a315718fb0d1eff191")
+            torrentRepository.getTorrentInfo(hashUnderTest)
                     .subscribe {
                         text_view.text = it?.name
 
@@ -58,7 +60,7 @@ class SampleActivity : AppCompatActivity() {
         }
 
         start_download.setOnClickListener {
-            torrentRepository.downloadTorrentInfo("b99f93d2df9472910941c4a315718fb0d1eff191")
+            torrentRepository.downloadTorrentInfo(hashUnderTest)
                     .map { it?.fileList?.last()?.let { torrentRepository.startFileDownloading(it, this, true) } }
                     .subscribe {
                         text_view.text = "download started"
@@ -67,7 +69,7 @@ class SampleActivity : AppCompatActivity() {
         }
 
         open_file.setOnClickListener {
-            torrentRepository.getTorrentInfo("b99f93d2df9472910941c4a315718fb0d1eff191")
+            torrentRepository.getTorrentInfo(hashUnderTest)
                     .subscribe {
                         it?.fileList?.last()?.let {
                             it.openFile(this, torrentRepository, {
@@ -78,7 +80,7 @@ class SampleActivity : AppCompatActivity() {
         }
 
         get_torrent_file.setOnClickListener {
-            torrentRepository.getTorrentInfo("b99f93d2df9472910941c4a315718fb0d1eff191")
+            torrentRepository.getTorrentInfo(hashUnderTest)
                     .map { torrentRepository.getTorrentFileFromPersistence(it!!.info_hash, it.fileList.last().getFullPath()) }
                     .subscribe {
                         it?.primaryKey.let { text_view.text = "primary key = $it" }
@@ -97,23 +99,30 @@ class SampleActivity : AppCompatActivity() {
         }
 
         post_torrent_info.setOnClickListener {
-            val torrentInfo = TorrentInfo()
-            torrentInfo.name = "arran test torrent"
-            torrentInfo.announce = "test announce"
-            torrentInfo.announceList = listOf("test_announce.com/announce")
-            torrentInfo.singleFileTorrent = true
-            torrentInfo.totalSize = 1000
-            torrentInfo.createdBy = "android Confluence wrapper"
-            val outputFile = File(Confluence.workingDir.absolutePath, "${torrentInfo.name}.torrent")
-            val hash = "b99f93d2df9472910941c4a315718fb0d1eff191"
-
-            val (outputHash, file) = hash.getTorrentFileWithTrackers(outputFile)
-            torrentRepository.postTorrentFile(hash, file.absoluteFile)
+            torrentRepository.postTorrentFile(hashUnderTest,  File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/Test.torrent"))
                     .subscribe({
-                        text_view.text = "$hash torrent file created ${file.absolutePath}"
+                        text_view.text = "$hashUnderTest torrent file created"
                     }, {
                         it.printStackTrace()
                     })
+
+
+//            val torrentInfo = TorrentInfo()
+//            torrentInfo.name = "arran test torrent"
+//            torrentInfo.announce = "test announce"
+//            torrentInfo.announceList = listOf("test_announce.com/announce")
+//            torrentInfo.singleFileTorrent = true
+//            torrentInfo.totalSize = 1000
+//            torrentInfo.createdBy = "android Confluence wrapper"
+//            val outputFile = File(Confluence.workingDir.absolutePath, "${torrentInfo.name}.torrent")
+//
+//            val (outputHash, file) = hashUnderTest.generateTorrentFileWithTrackers(torrentInfo.totalSize, Confluence.announceList)
+//            torrentRepository.postTorrentFile(hashUnderTest, file.absoluteFile)
+//                    .subscribe({
+//                        text_view.text = "$hashUnderTest torrent file created ${file.absolutePath}"
+//                    }, {
+//                        it.printStackTrace()
+//                    })
         }
     }
 }
