@@ -230,17 +230,11 @@ private fun File.hashMetaInfo(): String {
     return sb.toString()
 }
 
-fun TorrentInfo.generateTorrentFile(outputFile: File): Pair<String, File> {
+fun String.getTorrentFileWithTrackers(outputFile: File):  Pair<String, File>{
     val torrentCreator = TorrentCreator()
-    val pieceLength = 512 * 1024
 
     val info = HashMap<String, Any>()
-    info.put("name", this.name)
-    info.put("length", this.totalSize)
-    info.put("single-file", "true")
-//    info.put("piece length", pieceLength)
-//    info.put("path", listOf("test_file_path.txt").toTypedArray())
-//    pieces?.let { info.put("pieces", it) }
+    info.put("name", this)
     val metainfo = HashMap<String, Any>()
     metainfo.put("announce", Confluence.announceList.first())
     metainfo.put("announce-list", Confluence.announceList)

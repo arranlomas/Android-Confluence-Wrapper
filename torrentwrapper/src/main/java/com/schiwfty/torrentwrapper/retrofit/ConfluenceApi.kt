@@ -24,7 +24,7 @@ internal class ConfluenceApi(private val clientAPI: ClientAPI) {
         return clientAPI.postTorrent(hash, requestBody)
     }
 
-    val getStatus: Observable<String>
+    val getStatus: Observable<ResponseBody>
         get() = clientAPI.getStatus()
 
     fun getFileData(hash: String, path: String): Observable<ResponseBody> {

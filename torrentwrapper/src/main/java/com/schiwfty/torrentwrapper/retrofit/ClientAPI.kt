@@ -21,7 +21,7 @@ internal interface ClientAPI {
     fun getInfo(@Query("ih") info_hash: String): Observable<ResponseBody>
 
     @GET("/status")
-    fun getStatus(): Observable<String>
+    fun getStatus(): Observable<ResponseBody>
 
     @GET("/data")
     @Streaming

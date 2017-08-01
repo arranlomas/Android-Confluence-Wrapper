@@ -8,9 +8,9 @@ import android.view.View
 import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
-import com.schiwfty.torrentwrapper.utils.generateTorrentFile
 import com.schiwfty.torrentwrapper.utils.getFullPath
 import com.schiwfty.torrentwrapper.utils.getMagnetLink
+import com.schiwfty.torrentwrapper.utils.getTorrentFileWithTrackers
 import com.schiwfty.torrentwrapper.utils.openFile
 import kotlinx.android.synthetic.main.activity_sample.*
 import java.io.File
@@ -105,7 +105,9 @@ class SampleActivity : AppCompatActivity() {
             torrentInfo.totalSize = 1000
             torrentInfo.createdBy = "android Confluence wrapper"
             val outputFile = File(Confluence.workingDir.absolutePath, "${torrentInfo.name}.torrent")
-            val (hash, file) = torrentInfo.generateTorrentFile(outputFile)
+            val hash = "b99f93d2df9472910941c4a315718fb0d1eff191"
+
+            val (outputHash, file) = hash.getTorrentFileWithTrackers(outputFile)
             torrentRepository.postTorrentFile(hash, file.absoluteFile)
                     .subscribe({
                         text_view.text = "$hash torrent file created ${file.absolutePath}"

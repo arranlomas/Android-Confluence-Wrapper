@@ -70,6 +70,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
 
     override fun getStatus(): Observable<String> {
         return confluenceApi.getStatus
+                .map { it.string() }
                 .composeIo()
     }
 
