@@ -15,4 +15,6 @@ internal interface ITorrentPersistence {
     fun removeTorrentDownloadFile(torrentFile: TorrentFile)
 
     fun saveTorrentFile(torrentFile: TorrentFile)
+
+    fun clear()
 }

@@ -59,4 +59,7 @@ interface ITorrentRepository {
 
     //gets a downloading file from persistence
     fun getTorrentFileFromPersistence(hash: String, path: String): TorrentFile?
+
+    //clears all files from persistence
+    fun clearPersistence()
 }

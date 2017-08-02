@@ -209,4 +209,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
         return resultSubject
     }
 
+    override fun clearPersistence() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }

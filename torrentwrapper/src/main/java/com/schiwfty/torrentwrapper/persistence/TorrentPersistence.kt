@@ -12,6 +12,7 @@ import io.realm.RealmResults
  * Created by arran on 19/05/2017.
  */
 internal class TorrentPersistence : ITorrentPersistence {
+
     lateinit override var torrentFileDeleted: (TorrentFile) -> Unit
 
 
@@ -63,6 +64,14 @@ internal class TorrentPersistence : ITorrentPersistence {
         val realm = Realm.getDefaultInstance()
         realm.executeTransaction {
             realm.insertOrUpdate(torrentFile.mapToRealm())
+        }
+        realm.close()
+    }
+
+    override fun clear() {
+        val realm = Realm.getDefaultInstance()
+        realm.executeTransaction {
+            realm.deleteAll()
         }
         realm.close()
     }
