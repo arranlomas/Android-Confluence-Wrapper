@@ -33,7 +33,7 @@ interface ITorrentRepository {
 
     fun startFileDownloading(torrentFile: TorrentFile, context: Context, wifiOnly: Boolean)
 
-    fun addFileToClient(activity: Activity, file: File): PublishSubject<TorrentInfo>
+    fun addFileToClient(file: File): PublishSubject<TorrentInfo>
 
     //PERSISTENCE
     //adds a torrent file to the realm database
