@@ -68,6 +68,18 @@
                 android:id="@+id/post_torrent_info"
                 android:text="create torrent file from torrentInfo object"/>
 
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/clear_persistence"
+                android:text="clear persistence"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/post_test_torrent"
+                android:text="post test torrent"/>
+
             <TextView
                 android:id="@+id/text_view"
                 android:layout_width="match_parent"

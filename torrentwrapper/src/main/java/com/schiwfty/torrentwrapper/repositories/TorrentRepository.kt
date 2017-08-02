@@ -109,7 +109,6 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     override fun postTorrentFile(hash: String, file: File): Observable<ResponseBody> {
         if (!file.isValidTorrentFile()) throw IllegalStateException("File is not a valid torrent file")
         return Observable.just({
-            file.copyToTorrentDirectory()
             val inputStream = FileInputStream(file)
             val bytes = IOUtils.toByteArray(inputStream)
             bytes
@@ -210,6 +209,6 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     }
 
     override fun clearPersistence() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        torrentPersistence.clear()
     }
 }

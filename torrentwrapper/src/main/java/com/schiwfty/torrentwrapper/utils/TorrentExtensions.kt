@@ -134,10 +134,7 @@ fun LinkedList<String>.concatStrings(): String {
 }
 
 fun File.isValidTorrentFile(): Boolean {
-    if (isDirectory) return false
-    if (!exists()) return false
-    if (!canRead()) return false
-    if (!path.endsWith(".torrent")) return false
+    if (isDirectory || !exists() || !canRead() || !path.endsWith(".torrent")) return false
     return true
 }
 
@@ -228,29 +225,6 @@ private fun File.hashMetaInfo(): String {
     }
 
     return sb.toString()
-}
-
-fun String.generateTorrentFileWithTrackers(fileSize: Long, announceList: Array<String>):  Pair<String, File>{
-    val torrentCreator = TorrentCreator()
-    val outputFile = File(Confluence.torrentInfoStorage.absolutePath, "$this.torrent")
-
-    val pieceLength = 512 * 1024
-
-
-
-    val info = HashMap<String, Any>()
-    info.put("name", "test name")
-    val metainfo = HashMap<String, Any>()
-    metainfo.put("announce", announceList.first())
-    metainfo.put("announce-list", announceList)
-    metainfo.put("info", info)
-    info.put("length", fileSize)
-    info.put("piece length", pieceLength)
-    val out = FileOutputStream(outputFile)
-    torrentCreator.encodeMap(metainfo, out)
-    out.close()
-    val infoHash = outputFile.hashMetaInfo()
-    return Pair(infoHash, outputFile)
 }
 
 fun TorrentInfo.getMagnetLink(): String {
