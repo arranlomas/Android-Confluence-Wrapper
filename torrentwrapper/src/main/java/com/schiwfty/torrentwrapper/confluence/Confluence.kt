@@ -61,26 +61,26 @@ object Confluence {
     }
 
     var announceList: Array<String> = arrayOf(
-            "udp://tracker.pirateparty.gr:6969/announce",
             "udp://tracker.coppersurfer.tk:6969/announce",
-            "udp://tracker.leechers-paradise.org:6969/announce",
+            "udp://tracker.skyts.net:6969/announce",
+            "udp://tracker.safe.moe:6969/announce",
+            "udp://tracker.piratepublic.com:1337/announce",
+            "udp://tracker.pirateparty.gr:6969/announce",
+            "udp://allesanddro.de:1337/announce",
             "udp://9.rarbg.com:2710/announce",
             "udp://p4p.arenabg.com:1337/announce",
-            "http://asnet.pw:2710/announce",
-            "http://tracker.opentrackr.org:1337/announce",
+            "http://p4p.arenabg.com:1337/announce",
             "udp://tracker.opentrackr.org:1337/announce",
-            "udp://public.popcorn-tracker.org:6969/announce",
+            "http://tracker.opentrackr.org:1337/announce",
+            "http://asnet.pw:2710/announce",
             "udp://tracker.internetwarriors.net:1337/announce",
-            "udp://peerfect.org:6969/announce",
-            "udp://open.stealth.si:80/announce",
-            "udp://open.facedatabg.net:6969/announce",
-            "udp://mgtracker.org:6969/announce",
-            "http://91.218.230.81:6969/announce",
+            "udp://public.popcorn-tracker.org:6969/announce",
+            "udp://tracker1.wasabii.com.tw:6969/announce",
+            "udp://tracker.zer0day.to:1337/announce",
             "udp://tracker.mg64.net:6969/announce",
-            "udp://tracker.dler.org:6969/announce",
-            "udp://leecherhaven.zapto.org:6969/announce",
-            "udp://ipv4.tracker.harry.lu:80/announce",
-            "http://tracker.mg64.net:6881/announce ")
+            "udp://peerfect.org:6969/announce",
+            "http://tracker.mg64.net:6881/announce",
+            "http://mgtracker.org:6969/announce")
 
     private fun getAvailablePort(): Int {
         var s: ServerSocket? = null
