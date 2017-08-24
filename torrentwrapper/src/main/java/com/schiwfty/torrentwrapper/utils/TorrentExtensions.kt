@@ -8,7 +8,6 @@ import android.webkit.MimeTypeMap
 import com.schiwfty.torrentwrapper.bencoding.TorrentCreator
 import com.schiwfty.torrentwrapper.bencoding.TorrentParser
 import com.schiwfty.torrentwrapper.confluence.Confluence
-import com.schiwfty.torrentwrapper.confluence.Confluence.announceList
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
@@ -169,7 +168,7 @@ fun TorrentFile.canCast(): Boolean {
     } else return false
 }
 
-fun File.createTorrent(outputFile: File): Pair<String, File> {
+fun File.createTorrent(outputFile: File, announceList: Array<String>): Pair<String, File> {
     val torrentCreator = TorrentCreator()
     val pieceLength = 512 * 1024
     val pieces = torrentCreator.hashPieces(this, pieceLength)
@@ -238,3 +237,25 @@ fun TorrentInfo.getMagnetLink(): String {
     }
     return sb.toString()
 }
+
+internal val defaultAnnounceList: Array<String> = arrayOf(
+        "udp://tracker.coppersurfer.tk:6969/announce",
+        "udp://tracker.skyts.net:6969/announce",
+        "udp://tracker.safe.moe:6969/announce",
+        "udp://tracker.piratepublic.com:1337/announce",
+        "udp://tracker.pirateparty.gr:6969/announce",
+        "udp://allesanddro.de:1337/announce",
+        "udp://9.rarbg.com:2710/announce",
+        "udp://p4p.arenabg.com:1337/announce",
+        "http://p4p.arenabg.com:1337/announce",
+        "udp://tracker.opentrackr.org:1337/announce",
+        "http://tracker.opentrackr.org:1337/announce",
+        "http://asnet.pw:2710/announce",
+        "udp://tracker.internetwarriors.net:1337/announce",
+        "udp://public.popcorn-tracker.org:6969/announce",
+        "udp://tracker1.wasabii.com.tw:6969/announce",
+        "udp://tracker.zer0day.to:1337/announce",
+        "udp://tracker.mg64.net:6969/announce",
+        "udp://peerfect.org:6969/announce",
+        "http://tracker.mg64.net:6881/announce",
+        "http://mgtracker.org:6969/announce")

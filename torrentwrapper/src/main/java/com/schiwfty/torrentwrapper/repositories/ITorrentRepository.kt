@@ -6,6 +6,7 @@ import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.models.ConfluenceInfo
 import com.schiwfty.torrentwrapper.models.FileStatePiece
+import com.schiwfty.torrentwrapper.utils.defaultAnnounceList
 import okhttp3.ResponseBody
 import rx.Observable
 import java.io.File
@@ -33,7 +34,7 @@ interface ITorrentRepository {
 
     fun startFileDownloading(torrentFile: TorrentFile, context: Context, wifiOnly: Boolean)
 
-    fun addFileToClient(file: File): PublishSubject<TorrentInfo>
+    fun addFileToClient(file: File, announceList: Array<String> = defaultAnnounceList): PublishSubject<TorrentInfo>
 
     //PERSISTENCE
     //adds a torrent file to the realm database

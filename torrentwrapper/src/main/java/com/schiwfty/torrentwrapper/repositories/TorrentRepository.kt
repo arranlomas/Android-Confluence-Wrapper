@@ -170,13 +170,13 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
         return torrentPersistence.getDownloadingFile(hash, path)
     }
 
-    override fun addFileToClient(file: File): PublishSubject<TorrentInfo> {
+    override fun addFileToClient(file: File, announceList: Array<String>): PublishSubject<TorrentInfo> {
         val confluenceFile = File(Confluence.workingDir.absolutePath, file.name)
         if (file.exists() && !confluenceFile.exists()) file.copyTo(confluenceFile)
         Log.v("copying file", "file: ${file.name} working directory: ${Confluence.workingDir.absolutePath}")
         //TODO use observable instead of publish subject
         val resultSubject = PublishSubject.create<TorrentInfo>()
-        val (hash, torrentFile) = file.createTorrent(File(Confluence.workingDir, "${file.nameWithoutExtension}.torrent"))
+        val (hash, torrentFile) = file.createTorrent(File(Confluence.workingDir, "${file.nameWithoutExtension}.torrent"), announceList)
         val inputStream = FileInputStream(torrentFile)
         val bytes = IOUtils.toByteArray(inputStream)
 //                        val torrentFile = File(Confluence.workingDir, file.name)
