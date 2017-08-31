@@ -52,7 +52,6 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                     .toList()
                     .subscribe({
                         torrentFileProgressSource.onNext(it)
-                        Log.v("filestateobservableList", "returned: ${it.size}")
                     }, {
                         it.printStackTrace()
                     })
@@ -63,6 +62,13 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     init {
         statusThread.start()
         torrentPersistence.torrentFileDeleted = { torrentFile -> torrentFileDeleteListener.onNext(torrentFile) }
+    }
+
+    override fun isConnected(): Observable<Boolean> {
+        return confluenceApi.getStatus
+                .composeIo()
+                .map { true }
+                .onErrorResumeNext { Observable.just(false) }
     }
 
     override fun getStatus(): Observable<String> {

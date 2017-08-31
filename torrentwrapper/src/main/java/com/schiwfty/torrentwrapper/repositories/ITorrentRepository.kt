@@ -23,6 +23,8 @@ interface ITorrentRepository {
     //API
     fun getStatus(): Observable<String>
 
+    fun isConnected(): Observable<Boolean>
+
     fun postTorrentFile(hash: String, file: File): Observable<ResponseBody>
 
     //returns the file state

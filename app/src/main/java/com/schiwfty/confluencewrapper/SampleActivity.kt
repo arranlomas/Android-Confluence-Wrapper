@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.view.View
 import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
 import com.schiwfty.torrentwrapper.utils.getFullPath
@@ -22,17 +21,26 @@ class SampleActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sample)
         val directoryPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path + File.separator + "wrapper-test"
+
         Confluence.install(applicationContext, directoryPath)
+        torrentRepository = Confluence.torrentRepository
+
+        torrentRepository.isConnected()
+                .subscribe { Log.v("is connected", "$it") }
+
         Confluence.start(this, R.mipmap.ic_launcher)
+                .map { Log.v("confluence state", it.name) }
+                .flatMap { torrentRepository.isConnected(); }
                 .subscribe {
-                    Log.v("confluence state", it.name)
-                    when (it) {
-                        Confluence.ConfluenceState.STARTED -> buttons.visibility = View.VISIBLE
-                        else -> buttons.visibility = View.GONE
-                    }
+                    Log.v("is connected", "$it")
+//                    when (it) {
+//                        Confluence.ConfluenceState.STARTED -> buttons.visibility = View.VISIBLE
+//                        else -> buttons.visibility = View.GONE
+//                    }
                 }
 
-        torrentRepository = Confluence.torrentRepository
+        torrentRepository.isConnected()
+                .subscribe { Log.v("is connected", "$it") }
 
         get_status.setOnClickListener {
             torrentRepository.getStatus()
@@ -45,7 +53,6 @@ class SampleActivity : AppCompatActivity() {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
                     .subscribe {
                         text_view.text = it?.name
-
                     }
         }
 
@@ -53,7 +60,6 @@ class SampleActivity : AppCompatActivity() {
             torrentRepository.getTorrentInfo(hashUnderTest)
                     .subscribe {
                         text_view.text = it?.name
-
                     }
         }
 
