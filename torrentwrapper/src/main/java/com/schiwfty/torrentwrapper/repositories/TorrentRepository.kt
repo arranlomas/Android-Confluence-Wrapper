@@ -96,7 +96,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     }
 
     override fun getAllTorrentsFromStorage(): Observable<List<TorrentInfo>> {
-        return Observable.just({
+        try {
             val torrentList = mutableListOf<TorrentInfo>()
             torrentInfoStorage.walkTopDown().iterator().forEach {
                 if (it.isValidTorrentFile()) {
@@ -104,9 +104,10 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                     if (torrentInfo != null) torrentList.add(torrentInfo)
                 }
             }
-            torrentList.toList()
-        }.invoke())
-                .composeIo()
+            return Observable.just(torrentList.toList()).composeIo()
+        }catch (e: Exception){
+            return Observable.just(emptyList<TorrentInfo>()).doOnNext { throw e }
+        }
     }
 
     override fun postTorrentFile(hash: String, file: File): Observable<ResponseBody> {
