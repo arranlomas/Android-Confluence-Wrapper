@@ -16,8 +16,6 @@ import io.realm.Realm
 import rx.subjects.PublishSubject
 import rx.subscriptions.CompositeSubscription
 import java.io.File
-import java.io.IOException
-import java.net.ServerSocket
 
 
 /**
@@ -41,7 +39,9 @@ object Confluence {
         STOPPED
     }
 
-    fun install(context: Context, workingDirectoryPath: String) {
+    fun install(context: Context, workingDirectoryPath: String, daemonPort: Int = 8080) {
+        this.workingDir = File(workingDirectoryPath)
+        this.daemonPort = daemonPort.toString()
         Realm.init(context)
         Stetho.initialize(
                 Stetho.newInitializerBuilder(context)
@@ -52,32 +52,11 @@ object Confluence {
         val arch = System.getProperty("os.arch")
         Log.v("architecture", arch)
 
-        workingDir = File(workingDirectoryPath)
         torrentInfoStorage = File(com.schiwfty.torrentwrapper.confluence.Confluence.workingDir.absolutePath + java.io.File.separator + "torrents")
         torrentRepositoryComponent = DaggerTorrentRepositoryComponent.builder()
                 .networkModule(NetworkModule())
                 .build()
         torrentRepository = torrentRepositoryComponent.getTorrentRepository()
-    }
-    private fun getAvailablePort(): Int {
-        var s: ServerSocket? = null
-        var streamPort = -1
-        try {
-            s = ServerSocket(0)
-            streamPort = s.localPort
-            return streamPort
-        } catch (e: IOException) {
-            e.printStackTrace()
-        } finally {
-            if (s != null)
-                try {
-                    s.close()
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-
-        }
-        return streamPort
     }
 
     fun start(activity: Activity, notificationResourceId: Int): PublishSubject<ConfluenceState> {
@@ -87,23 +66,29 @@ object Confluence {
     fun start(activity: Activity, notificationResourceId: Int, onPermissionDenied: () -> Unit): PublishSubject<ConfluenceState> {
         RxPermissions(activity)
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .subscribe({
-                    if (it != null && it) {
+                .map {
+                    if (it !=null && it) {
                         workingDir.mkdirs()
                         torrentInfoStorage.mkdirs()
+                    } else {
+                        onPermissionDenied.invoke()
+                    }
+                }
+                .flatMap { torrentRepository.isConnected() }
+                .subscribe({ connected ->
+                    if (!connected) {
                         val daemonIntent = Intent(activity, ConfluenceDaemonService::class.java)
                         daemonIntent.putExtra(ConfluenceDaemonService.ARG_NOTIFICATION_ICON_RES, notificationResourceId)
                         daemonIntent.addCategory(ConfluenceDaemonService.TAG)
                         activity.startService(daemonIntent)
+                        listenForDaemon()
                     } else {
                         subscriptions.unsubscribe()
-                        startedSubject.onNext(ConfluenceState.STOPPED)
-                        onPermissionDenied.invoke()
+                        startedSubject.onNext(ConfluenceState.STARTED)
                     }
                 }, {
                     it.printStackTrace()
                 })
-        listenForDaemon()
         return startedSubject
     }
 

@@ -79,7 +79,6 @@ internal class NetworkModule {
     @Provides
     internal fun provideBaseUrl(): String {
         Confluence.localhostIP = getIPAddress(true)
-        Confluence.daemonPort = "8080"
         Confluence.fullUrl = "http://${Confluence.localhostIP}${Confluence.daemonPort}"
         Log.v("IP", Confluence.localhostIP)
         Log.v("PORT", Confluence.daemonPort)
