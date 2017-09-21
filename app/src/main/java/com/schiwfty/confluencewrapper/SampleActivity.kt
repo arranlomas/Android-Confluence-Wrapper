@@ -130,5 +130,14 @@ class SampleActivity : AppCompatActivity() {
                         text_view.text = it.localizedMessage
                     })
         }
+
+        verify_data.setOnClickListener {
+            torrentRepository.verifyData(hashUnderTest)
+                    .subscribe({
+                        text_view.text = "data verified"
+                    },{
+                        text_view.text = it.localizedMessage
+                    })
+        }
     }
 }

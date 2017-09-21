@@ -13,6 +13,7 @@ import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.persistence.ITorrentPersistence
 import com.schiwfty.torrentwrapper.retrofit.ConfluenceApi
 import com.schiwfty.torrentwrapper.utils.*
+import okhttp3.MediaType
 import okhttp3.ResponseBody
 import org.apache.commons.io.IOUtils
 import rx.Observable
@@ -111,7 +112,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     }
 
     override fun postTorrentFile(hash: String, file: File): Observable<ResponseBody> {
-        if (!file.isValidTorrentFile()) throw IllegalStateException("File is not a valid torrent file")
+        if (!file.isValidTorrentFile()) return Observable.just(ResponseBody.create(MediaType.parse("text"), byteArrayOf())).doOnNext { throw IllegalStateException("File is not a valid torrent file") }
         return Observable.just({
             val inputStream = FileInputStream(file)
             val bytes = IOUtils.toByteArray(inputStream)
@@ -129,6 +130,12 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
             list, torrentFile ->
             Pair(torrentFile, list)
         })
+                .composeIo()
+    }
+
+    override fun verifyData(hash: String): Observable<Boolean> {
+        return confluenceApi.verifyData(hash)
+                .map { true }
                 .composeIo()
     }
 

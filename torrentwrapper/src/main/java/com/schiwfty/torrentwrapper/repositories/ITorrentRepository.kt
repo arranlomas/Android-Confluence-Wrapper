@@ -27,6 +27,8 @@ interface ITorrentRepository {
 
     fun postTorrentFile(hash: String, file: File): Observable<ResponseBody>
 
+    fun verifyData(hash: String): Observable<Boolean>
+
     //returns the file state
     fun getFileState(torrentFile: TorrentFile): Observable<Pair<TorrentFile, List<FileStatePiece>>>
 

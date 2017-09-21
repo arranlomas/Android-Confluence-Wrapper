@@ -2,6 +2,7 @@ package com.schiwfty.torrentwrapper.retrofit
 
 
 import com.schiwfty.torrentwrapper.models.FileStatePiece
+import com.schiwfty.torrentwrapper.utils.composeIo
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -33,5 +34,9 @@ internal class ConfluenceApi(private val clientAPI: ClientAPI) {
 
     fun getFileState(hash: String, path: String): Observable<List<FileStatePiece>> {
         return clientAPI.getFileState(hash, path)
+    }
+
+    fun verifyData(hash: String): Observable<Boolean>{
+        return clientAPI.verifyData(hash)
     }
 }
