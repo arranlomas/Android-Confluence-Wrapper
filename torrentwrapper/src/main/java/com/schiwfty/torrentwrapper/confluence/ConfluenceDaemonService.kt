@@ -3,6 +3,7 @@ package com.schiwfty.torrentwrapper.confluence
 import android.Manifest.permission
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.IBinder
@@ -19,8 +20,17 @@ class ConfluenceDaemonService : Service() {
 
 
     companion object {
+        val ARG_SEED = "arg_seed"
         val ARG_NOTIFICATION_ICON_RES = "arg_notification_icon_resource_id"
         val TAG = "DAEMON_SERVICE_TAG"
+
+        fun start(context: Context, notificationRes: Int, seed: Boolean = false){
+            val daemonIntent = Intent(context, ConfluenceDaemonService::class.java)
+            daemonIntent.putExtra(ConfluenceDaemonService.ARG_NOTIFICATION_ICON_RES, notificationRes)
+            daemonIntent.putExtra(ConfluenceDaemonService.ARG_SEED, seed)
+            daemonIntent.addCategory(ConfluenceDaemonService.TAG)
+            context.startService(daemonIntent)
+        }
     }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -32,8 +42,9 @@ class ConfluenceDaemonService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val seed = intent?.getBooleanExtra(ARG_SEED, false) ?: false
         Thread {
-            confluencewrapper.Confluencewrapper.androidMain(Confluence.workingDir.absolutePath, true, ":${Confluence.daemonPort}")
+            confluencewrapper.Confluencewrapper.androidMain(Confluence.workingDir.absolutePath, seed, ":${Confluence.daemonPort}")
         }.start()
         val notificationResourceID = intent?.getIntExtra(ARG_NOTIFICATION_ICON_RES, -1) ?: -1
         val permissionCheck = ContextCompat.checkSelfPermission(this,

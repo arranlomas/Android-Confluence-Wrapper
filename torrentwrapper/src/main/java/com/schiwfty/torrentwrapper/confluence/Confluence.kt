@@ -52,18 +52,14 @@ object Confluence {
         val arch = System.getProperty("os.arch")
         Log.v("architecture", arch)
 
-        torrentInfoStorage = File(com.schiwfty.torrentwrapper.confluence.Confluence.workingDir.absolutePath + java.io.File.separator + "torrents")
+        torrentInfoStorage = File(Confluence.workingDir.absolutePath + File.separator + "torrents")
         torrentRepositoryComponent = DaggerTorrentRepositoryComponent.builder()
                 .networkModule(NetworkModule())
                 .build()
         torrentRepository = torrentRepositoryComponent.getTorrentRepository()
     }
 
-    fun start(activity: Activity, notificationResourceId: Int): PublishSubject<ConfluenceState> {
-        return start(activity, notificationResourceId, {})
-    }
-
-    fun start(activity: Activity, notificationResourceId: Int, onPermissionDenied: () -> Unit): PublishSubject<ConfluenceState> {
+    fun start(activity: Activity, notificationResourceId: Int, seed: Boolean = false, onPermissionDenied: (() -> Unit)? = null): PublishSubject<ConfluenceState> {
         RxPermissions(activity)
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .map {
@@ -71,16 +67,13 @@ object Confluence {
                         workingDir.mkdirs()
                         torrentInfoStorage.mkdirs()
                     } else {
-                        onPermissionDenied.invoke()
+                        onPermissionDenied?.invoke()
                     }
                 }
                 .flatMap { torrentRepository.isConnected() }
                 .subscribe({ connected ->
                     if (!connected) {
-                        val daemonIntent = Intent(activity, ConfluenceDaemonService::class.java)
-                        daemonIntent.putExtra(ConfluenceDaemonService.ARG_NOTIFICATION_ICON_RES, notificationResourceId)
-                        daemonIntent.addCategory(ConfluenceDaemonService.TAG)
-                        activity.startService(daemonIntent)
+                        ConfluenceDaemonService.start(activity, notificationResourceId, seed)
                         listenForDaemon()
                     } else {
                         subscriptions.unsubscribe()
