@@ -14,8 +14,12 @@ import org.apache.commons.io.IOUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.IllegalFormatException;
 import java.util.List;
+
+import kotlin.jvm.Throws;
 
 public class Reader {
     private int currentByteIndex;
@@ -43,7 +47,7 @@ public class Reader {
      *
      * @return List<Object> containing all the parsed bencoded objects.
      */
-    public synchronized List<IBencodable> read() {
+    public synchronized List<IBencodable> read() throws IllegalAccessException {
         this.currentByteIndex = 0;
         long fileSize = datablob.length;
 
@@ -61,7 +65,7 @@ public class Reader {
      * @return Returns an Object that represents either BByteString,
      * BDictionary, BInt or BList.
      */
-    private IBencodable readSingleType() {
+    private IBencodable readSingleType() throws IllegalAccessException {
         // Read in the byte at current position and dispatch over it.
         byte current = datablob[currentByteIndex];
         switch (current) {
@@ -83,7 +87,7 @@ public class Reader {
             case 'l':
                 return readList();
         }
-        throw new Error("Parser in invalid state at byte " + currentByteIndex);
+        throw new IllegalAccessException("Parser in invalid state at byte " + currentByteIndex);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -100,7 +104,7 @@ public class Reader {
      *
      * @return BList object.
      */
-    private BList readList() {
+    private BList readList() throws IllegalAccessException {
         // If we got here, the current byte is an 'l'.
         if (readCurrentByte() != 'l')
             throw new Error("Error parsing list. Was expecting a 'l' but got " + readCurrentByte());
@@ -167,7 +171,7 @@ public class Reader {
      *
      * @return BDictionary representing the dictionary.
      */
-    private BDictionary readDictionary() {
+    private BDictionary readDictionary() throws IllegalAccessException {
         // If we got here, the current byte is an 'd'.
         if (readCurrentByte() != 'd')
             throw new Error("Error parsing dictionary. Was expecting a 'd' but got " + readCurrentByte());

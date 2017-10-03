@@ -20,7 +20,7 @@ class SampleActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sample)
-        val directoryPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path + File.separator + "wrapper-test"
+        val directoryPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path + File.separator + "Trickl"
 
         Confluence.install(applicationContext, directoryPath, 7070)
         torrentRepository = Confluence.torrentRepository
@@ -135,7 +135,16 @@ class SampleActivity : AppCompatActivity() {
             torrentRepository.verifyData(hashUnderTest)
                     .subscribe({
                         text_view.text = "data verified"
-                    },{
+                    }, {
+                        text_view.text = it.localizedMessage
+                    })
+        }
+
+        get_all_torrents.setOnClickListener {
+            torrentRepository.getAllTorrentsFromStorage()
+                    .subscribe({
+                        text_view.text = "all torrents: ${it.size}"
+                    }, {
                         text_view.text = it.localizedMessage
                     })
         }

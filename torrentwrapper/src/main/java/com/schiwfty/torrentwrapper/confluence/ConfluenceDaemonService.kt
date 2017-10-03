@@ -21,13 +21,15 @@ class ConfluenceDaemonService : Service() {
 
     companion object {
         val ARG_SEED = "arg_seed"
+        val ARG_SHOW_STOP = "arg_show_stop_action"
         val ARG_NOTIFICATION_ICON_RES = "arg_notification_icon_resource_id"
         val TAG = "DAEMON_SERVICE_TAG"
 
-        fun start(context: Context, notificationRes: Int, seed: Boolean = false){
+        fun start(context: Context, notificationRes: Int, seed: Boolean = false, showStopAction: Boolean = false) {
             val daemonIntent = Intent(context, ConfluenceDaemonService::class.java)
-            daemonIntent.putExtra(ConfluenceDaemonService.ARG_NOTIFICATION_ICON_RES, notificationRes)
-            daemonIntent.putExtra(ConfluenceDaemonService.ARG_SEED, seed)
+            daemonIntent.putExtra(ARG_NOTIFICATION_ICON_RES, notificationRes)
+            daemonIntent.putExtra(ARG_SEED, seed)
+            daemonIntent.putExtra(ARG_SHOW_STOP, showStopAction)
             daemonIntent.addCategory(ConfluenceDaemonService.TAG)
             context.startService(daemonIntent)
         }
@@ -43,6 +45,7 @@ class ConfluenceDaemonService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val seed = intent?.getBooleanExtra(ARG_SEED, false) ?: false
+        val showStop = intent?.getBooleanExtra(ARG_SHOW_STOP, false) ?: false
         Thread {
             confluencewrapper.Confluencewrapper.androidMain(Confluence.workingDir.absolutePath, seed, ":${Confluence.daemonPort}")
         }.start()
@@ -58,18 +61,19 @@ class ConfluenceDaemonService : Service() {
         if (intent != null && action != null && action == STOP_STRING) {
             stopForeground(true)
         } else if (intent != null) {
-            val exitIntent = Intent(this, ConfluenceDaemonService::class.java)
-            exitIntent.action = STOP_STRING
-
-            val pendingExit = PendingIntent.getService(this, 0, exitIntent, 0)
-
             val builder = NotificationCompat.Builder(this)
                     .setOngoing(true)
                     .setContentText("Daemon running")
 
             if (notificationResourceID != -1) {
                 builder.setSmallIcon(notificationResourceID)
-                        .addAction(notificationResourceID, STOP_STRING, pendingExit)
+
+                if (showStop) {
+                    val exitIntent = Intent(this, ConfluenceDaemonService::class.java)
+                    exitIntent.action = STOP_STRING
+                    val pendingExit = PendingIntent.getService(this, 0, exitIntent, 0)
+                    builder.addAction(notificationResourceID, STOP_STRING, pendingExit)
+                }
 
             }
 //            //TODO add this back in so clicking a notification opens an activity but tke the activity as an argument

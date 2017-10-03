@@ -11,6 +11,7 @@ import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
+import rx.Observable
 import java.io.*
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -22,27 +23,34 @@ import java.util.regex.Pattern
 /**
  * Created by arran on 30/04/2017.
  */
-fun File.getAsTorrentObject(): TorrentInfo? {
-    if (!isValidTorrentFile()) return null
-    val torrentInfo = TorrentParser.parseTorrent(this.absolutePath)
-    if (torrentInfo?.totalSize == 0L && torrentInfo.fileList.size > 1) {
-        torrentInfo.fileList.forEach {
-            torrentInfo.totalSize += it.fileLength ?: 0
-        }
+fun File.getAsTorrentObject(): Observable<TorrentInfo?> {
+    if (!isValidTorrentFile()) return Observable.just(null).map { throw IllegalArgumentException("File is not a valid torrent File") }
+    val obs: Observable<TorrentInfo?>
+    try {
+        obs = TorrentParser.parseTorrent(this.absolutePath)
+    }catch (e: Exception){
+        return Observable.just(null).map { throw e }
     }
-    if (torrentInfo?.singleFileTorrent ?: false) {
-        if (torrentInfo?.totalSize != null) {
-            val paths: LinkedList<String> = LinkedList(listOf(torrentInfo.name))
-            val torrentFile = TorrentFile()
-            torrentFile.fileLength = torrentInfo.totalSize
-            torrentFile.fileDirs = paths
-            torrentFile.torrentHash = torrentInfo.info_hash
-            torrentFile.primaryKey = "${torrentInfo.info_hash}${paths.concatStrings()}"
-            Log.v("generated primaryKey:", "Torrent: ${torrentInfo.name}   File: ${paths.last}     primaryKey: ${torrentInfo.info_hash}${paths.concatStrings()}")
-            torrentInfo.fileList = listOf(torrentFile)
-        }
-    }
-    return torrentInfo
+    return obs.map { torrentInfo ->
+                if (torrentInfo?.totalSize == 0L && torrentInfo.fileList.size > 1) {
+                    torrentInfo.fileList.forEach {
+                        torrentInfo.totalSize += it.fileLength ?: 0
+                    }
+                }
+                if (torrentInfo?.singleFileTorrent ?: false) {
+                    if (torrentInfo?.totalSize != null) {
+                        val paths: LinkedList<String> = LinkedList(listOf(torrentInfo.name))
+                        val torrentFile = TorrentFile()
+                        torrentFile.fileLength = torrentInfo.totalSize
+                        torrentFile.fileDirs = paths
+                        torrentFile.torrentHash = torrentInfo.info_hash
+                        torrentFile.primaryKey = "${torrentInfo.info_hash}${paths.concatStrings()}"
+                        Log.v("generated primaryKey:", "Torrent: ${torrentInfo.name}   File: ${paths.last}     primaryKey: ${torrentInfo.info_hash}${paths.concatStrings()}")
+                        torrentInfo.fileList = listOf(torrentFile)
+                    }
+                }
+                torrentInfo
+            }
 }
 
 fun Long.formatBytesAsSize(): String {

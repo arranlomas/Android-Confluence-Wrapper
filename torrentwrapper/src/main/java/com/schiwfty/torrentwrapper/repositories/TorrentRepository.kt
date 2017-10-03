@@ -81,34 +81,34 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     override fun downloadTorrentInfo(hash: String): Observable<TorrentInfo?> {
         return confluenceApi.getInfo(hash)
                 .composeIo()
-                .map {
+                .flatMap {
                     val file: File = File(torrentInfoStorage, "$hash.torrent")
-                    val torrentInfo = file.getAsTorrentObject()
-                    torrentInfo
+                    file.getAsTorrentObject()
                 }
     }
 
     override fun getTorrentInfo(hash: String): Observable<TorrentInfo?> {
         val file: File = File(torrentInfoStorage, "$hash.torrent")
         if (file.isValidTorrentFile()) {
-            val torrentInfo = file.getAsTorrentObject()
-            return Observable.just(torrentInfo)
+            return file.getAsTorrentObject()
         } else return downloadTorrentInfo(hash)
     }
 
     override fun getAllTorrentsFromStorage(): Observable<List<TorrentInfo>> {
-        try {
-            val torrentList = mutableListOf<TorrentInfo>()
-            torrentInfoStorage.walkTopDown().iterator().forEach {
-                if (it.isValidTorrentFile()) {
-                    val torrentInfo = it.getAsTorrentObject()
-                    if (torrentInfo != null) torrentList.add(torrentInfo)
-                }
+        val obs: MutableList<Observable<TorrentInfo?>> = mutableListOf()
+        torrentInfoStorage.walkTopDown().iterator().forEach {
+            if (it.isValidTorrentFile()) {
+                obs.add(it.getAsTorrentObject())
             }
-            return Observable.just(torrentList.toList()).composeIo()
-        }catch (e: Exception){
-            return Observable.just(emptyList<TorrentInfo>()).doOnNext { throw e }
+
         }
+        return Observable.zip(obs.toTypedArray(), {torrentInfo ->
+            val torrentInfoList = mutableListOf<TorrentInfo>()
+            torrentInfo.forEach {
+                torrentInfoList.add(it as TorrentInfo)
+            }
+            torrentInfoList.toList()
+        })
     }
 
     override fun postTorrentFile(hash: String, file: File): Observable<ResponseBody> {
@@ -196,11 +196,11 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
 //                        val torrentFile = File(Confluence.workingDir, file.name)
 
         Log.v("hash", hash)
-        val torrentObject = torrentFile.getAsTorrentObject()
         confluenceApi.postTorrent(hash, bytes)
                 .composeIo()
-                .map { resultSubject.onNext(torrentObject) }
+                .flatMap { torrentFile.getAsTorrentObject() }
                 .subscribe({
+                    resultSubject.onNext(it)
                     resultSubject.onCompleted()
                 }, {
                     resultSubject.onError(it)

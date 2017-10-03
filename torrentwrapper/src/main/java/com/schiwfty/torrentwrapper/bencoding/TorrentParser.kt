@@ -1,13 +1,11 @@
 package com.schiwfty.torrentwrapper.bencoding
 
 import android.util.Log
-import com.schiwfty.torrentwrapper.bencoding.types.BByteString
-import com.schiwfty.torrentwrapper.bencoding.types.BDictionary
-import com.schiwfty.torrentwrapper.bencoding.types.BInt
-import com.schiwfty.torrentwrapper.bencoding.types.BList
+import com.schiwfty.torrentwrapper.bencoding.types.*
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.utils.concatStrings
+import rx.Observable
 import java.io.File
 import java.io.IOException
 import java.text.ParseException
@@ -19,23 +17,22 @@ import java.util.*
  */
 object TorrentParser {
     @Throws(IOException::class)
-    fun parseTorrent(filePath: String): TorrentInfo? {
+    fun parseTorrent(filePath: String): Observable<TorrentInfo?> {
         val r = Reader(File(filePath))
-        val x = r.read()
-        // A valid torrentfile should only return a single dictionary.
-        if (x.size != 1)
-            throw Error("Parsing .torrent yielded wrong number of bencoding structs.")
+        val x: List<IBencodable>
         try {
-            return parseTorrent(x[0])
-        } catch (e: ParseException) {
-            System.err.println("Error parsing torrent!")
+            x = r.read()
+        }catch (e: Exception){
+            return Observable.just(null).map { throw e }
         }
 
-        return null
+        // A valid torrentfile should only return a single dictionary.
+        if (x.size != 1) Observable.just(null).doOnNext { throw Error("Parsing .torrent yielded wrong number of bencoding structs.") }
+        return parseTorrent(x[0])
     }
 
     @Throws(ParseException::class)
-    private fun parseTorrent(o: Any): TorrentInfo {
+    private fun parseTorrent(o: Any): Observable<TorrentInfo?> {
         if (o is BDictionary) {
             val torrentDictionary = o
             val infoDictionary = parseInfoDictionary(torrentDictionary) ?: throw IllegalStateException("info dictionary is null")
@@ -64,9 +61,9 @@ object TorrentParser {
 
             // Determine if torrent is a singlefile torrent.
             t.singleFileTorrent = (null != infoDictionary.find(BByteString("length")))
-            return t
+            return Observable.just(t)
         } else {
-            throw ParseException("Could not parse Object to BDictionary", 0)
+            return Observable.just(null).map { throw ParseException("Could not parse Object to BDictionary", 0) }
         }
     }
 

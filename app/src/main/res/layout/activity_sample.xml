@@ -84,6 +84,12 @@
                 android:id="@+id/verify_data"
                 android:text="verify data"/>
 
+            <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/get_all_torrents"
+            android:text="get all torrents from storage"/>
+
             <TextView
                 android:id="@+id/text_view"
                 android:layout_width="match_parent"
