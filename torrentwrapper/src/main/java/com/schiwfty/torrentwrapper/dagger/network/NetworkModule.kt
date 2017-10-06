@@ -117,6 +117,6 @@ internal class NetworkModule {
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
-        return ""
+        return "localhost:"
     }
 }
