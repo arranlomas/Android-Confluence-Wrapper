@@ -59,7 +59,15 @@ object Confluence {
         torrentRepository = torrentRepositoryComponent.getTorrentRepository()
     }
 
-    fun start(activity: Activity, notificationResourceId: Int, seed: Boolean = false, onPermissionDenied: (() -> Unit)? = null): PublishSubject<ConfluenceState> {
+    fun start(activity: Activity,
+              notificationResourceId: Int,
+              seed: Boolean = false,
+              showStopAction: Boolean = false,
+              killEntireProcessOnStopNotification: Boolean = false,
+              targetIntent: Intent? = null,
+              onPermissionDenied: (() -> Unit)? = null): PublishSubject<ConfluenceState> {
+        ConfluenceDaemonService.kellEntireProcessOnStopNotification = killEntireProcessOnStopNotification
+
         RxPermissions(activity)
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .map {
@@ -73,7 +81,7 @@ object Confluence {
                 .flatMap { torrentRepository.isConnected() }
                 .subscribe({ connected ->
                     if (!connected) {
-                        ConfluenceDaemonService.start(activity, notificationResourceId, seed)
+                        ConfluenceDaemonService.start(activity, notificationResourceId, seed, showStopAction , targetIntent)
                         listenForDaemon()
                     } else {
                         subscriptions.unsubscribe()
@@ -83,6 +91,10 @@ object Confluence {
                     it.printStackTrace()
                 })
         return startedSubject
+    }
+
+    fun stop(killEntireProcess: Boolean){
+        ConfluenceDaemonService.stopService(killEntireProcess)
     }
 
     private fun listenForDaemon() {

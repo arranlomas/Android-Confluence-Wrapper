@@ -1,5 +1,6 @@
 package com.schiwfty.confluencewrapper
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
 import android.support.v7.app.AppCompatActivity
@@ -28,15 +29,12 @@ class SampleActivity : AppCompatActivity() {
         torrentRepository.isConnected()
                 .subscribe { Log.v("is connected", "$it") }
 
-        Confluence.start(this, R.mipmap.ic_launcher)
+        val pendingIntent = Intent(this, SampleActivity::class.java)
+        Confluence.start(this, R.mipmap.ic_launcher, true, true, true, pendingIntent)
                 .map { Log.v("confluence state", it.name) }
                 .flatMap { torrentRepository.isConnected(); }
                 .subscribe {
                     Log.v("is connected", "$it")
-//                    when (it) {
-//                        Confluence.ConfluenceState.STARTED -> buttons.visibility = View.VISIBLE
-//                        else -> buttons.visibility = View.GONE
-//                    }
                 }
 
         torrentRepository.isConnected()
@@ -147,6 +145,10 @@ class SampleActivity : AppCompatActivity() {
                     }, {
                         text_view.text = it.localizedMessage
                     })
+        }
+
+        stop_service.setOnClickListener {
+            Confluence.stop(false)
         }
     }
 }

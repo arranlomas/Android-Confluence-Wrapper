@@ -2,8 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.schiwfty.confluencewrapper">
 
-
-
     <application
         android:fullBackupContent="true"
         android:allowBackup="true"

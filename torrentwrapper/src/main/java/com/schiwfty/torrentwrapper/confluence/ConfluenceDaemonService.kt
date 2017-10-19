@@ -9,24 +9,31 @@ import android.content.pm.PackageManager
 import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
-
+import rx.subjects.PublishSubject
 
 /**
  * Created by arran on 17/04/2017.
  */
-class ConfluenceDaemonService : Service() {
+internal class ConfluenceDaemonService : Service() {
     private val NOTIFICATION_ID = 12345
     var STOP_STRING = "STOP"
-
 
     companion object {
         val ARG_SEED = "arg_seed"
         val ARG_SHOW_STOP = "arg_show_stop_action"
         val ARG_NOTIFICATION_ICON_RES = "arg_notification_icon_resource_id"
         val TAG = "DAEMON_SERVICE_TAG"
+        val stopServiceEvent: PublishSubject<Boolean> = PublishSubject.create()
+        var targetIntent: Intent? = null
+        var kellEntireProcessOnStopNotification = false
 
-        fun start(context: Context, notificationRes: Int, seed: Boolean = false, showStopAction: Boolean = false) {
+        fun stopService(killEntireProcess: Boolean) {
+            stopServiceEvent.onNext(killEntireProcess)
+        }
+
+        fun start(context: Context, notificationRes: Int, seed: Boolean = false, showStopAction: Boolean = false, targetIntent: Intent? = null) {
             val daemonIntent = Intent(context, ConfluenceDaemonService::class.java)
+            ConfluenceDaemonService.Companion.targetIntent = targetIntent
             daemonIntent.putExtra(ARG_NOTIFICATION_ICON_RES, notificationRes)
             daemonIntent.putExtra(ARG_SEED, seed)
             daemonIntent.putExtra(ARG_SHOW_STOP, showStopAction)
@@ -39,27 +46,25 @@ class ConfluenceDaemonService : Service() {
         throw UnsupportedOperationException("Not yet implemented")
     }
 
-    override fun onCreate() {
-        super.onCreate()
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
         val seed = intent?.getBooleanExtra(ARG_SEED, false) ?: false
         val showStop = intent?.getBooleanExtra(ARG_SHOW_STOP, false) ?: false
         Thread {
             confluencewrapper.Confluencewrapper.androidMain(Confluence.workingDir.absolutePath, seed, ":${Confluence.daemonPort}")
         }.start()
+
         val notificationResourceID = intent?.getIntExtra(ARG_NOTIFICATION_ICON_RES, -1) ?: -1
-        val permissionCheck = ContextCompat.checkSelfPermission(this,
-                permission.WRITE_EXTERNAL_STORAGE)
+        val permissionCheck = ContextCompat.checkSelfPermission(this, permission.WRITE_EXTERNAL_STORAGE)
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) throw IllegalStateException("Cannot start confluence without have write external storage permissions")
 
         var action: String? = null
         if (intent != null) {
             action = intent.action
         }
+        stopServiceEvent.subscribe({ stopService(it) }, { /*swallow error*/ })
         if (intent != null && action != null && action == STOP_STRING) {
-            stopForeground(true)
+            stopService(kellEntireProcessOnStopNotification)
         } else if (intent != null) {
             val builder = NotificationCompat.Builder(this)
                     .setOngoing(true)
@@ -76,10 +81,11 @@ class ConfluenceDaemonService : Service() {
                 }
 
             }
-//            //TODO add this back in so clicking a notification opens an activity but tke the activity as an argument
-//            val targetIntent = Intent(this, MainActivity::class.java)
-//            val pIntent = PendingIntent.getActivity(this, 0, targetIntent, 0)
-//                    builder.setContentIntent(pIntent)
+
+            targetIntent?.let {
+                val pIntent = PendingIntent.getActivity(this, 0, it, 0)
+                builder.setContentIntent(pIntent)
+            }
 
             startForeground(NOTIFICATION_ID, builder.build())
         }
@@ -87,4 +93,11 @@ class ConfluenceDaemonService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+    private fun stopService(killEntireProcess: Boolean) {
+        stopForeground(true)
+        if (killEntireProcess) {
+            val id = android.os.Process.myPid()
+            android.os.Process.killProcess(id)
+        }
+    }
 }
