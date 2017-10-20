@@ -25,10 +25,9 @@ internal class ConfluenceDaemonService : Service() {
         val TAG = "DAEMON_SERVICE_TAG"
         val stopServiceEvent: PublishSubject<Boolean> = PublishSubject.create()
         var targetIntent: Intent? = null
-        var kellEntireProcessOnStopNotification = false
 
-        fun stopService(killEntireProcess: Boolean) {
-            stopServiceEvent.onNext(killEntireProcess)
+        fun stopService() {
+            stopServiceEvent.onNext(true)
         }
 
         fun start(context: Context, notificationRes: Int, seed: Boolean = false, showStopAction: Boolean = false, targetIntent: Intent? = null) {
@@ -62,9 +61,9 @@ internal class ConfluenceDaemonService : Service() {
         if (intent != null) {
             action = intent.action
         }
-        stopServiceEvent.subscribe({ stopService(it) }, { /*swallow error*/ })
+        stopServiceEvent.subscribe({ stopService() }, { /*swallow error*/ })
         if (intent != null && action != null && action == STOP_STRING) {
-            stopService(kellEntireProcessOnStopNotification)
+            stopService()
         } else if (intent != null) {
             val builder = NotificationCompat.Builder(this)
                     .setOngoing(true)
@@ -93,11 +92,7 @@ internal class ConfluenceDaemonService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    private fun stopService(killEntireProcess: Boolean) {
+    private fun stopService() {
         stopForeground(true)
-        if (killEntireProcess) {
-            val id = android.os.Process.myPid()
-            android.os.Process.killProcess(id)
-        }
     }
 }

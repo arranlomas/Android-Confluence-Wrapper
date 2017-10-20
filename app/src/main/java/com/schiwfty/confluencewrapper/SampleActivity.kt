@@ -30,7 +30,7 @@ class SampleActivity : AppCompatActivity() {
                 .subscribe { Log.v("is connected", "$it") }
 
         val pendingIntent = Intent(this, SampleActivity::class.java)
-        Confluence.start(this, R.mipmap.ic_launcher, true, true, true, pendingIntent)
+        Confluence.start(this, R.mipmap.ic_launcher, true, true, pendingIntent)
                 .map { Log.v("confluence state", it.name) }
                 .flatMap { torrentRepository.isConnected(); }
                 .subscribe {
@@ -148,7 +148,14 @@ class SampleActivity : AppCompatActivity() {
         }
 
         stop_service.setOnClickListener {
-            Confluence.stop(false)
+            Confluence.stop()
+            finish()
+            Thread{
+                Thread.sleep(500)
+                val id = android.os.Process.myPid()
+                android.os.Process.killProcess(id)
+            }.start()
+
         }
     }
 }

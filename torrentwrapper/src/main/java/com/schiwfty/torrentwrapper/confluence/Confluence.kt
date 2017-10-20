@@ -63,10 +63,8 @@ object Confluence {
               notificationResourceId: Int,
               seed: Boolean = false,
               showStopAction: Boolean = false,
-              killEntireProcessOnStopNotification: Boolean = false,
               targetIntent: Intent? = null,
               onPermissionDenied: (() -> Unit)? = null): PublishSubject<ConfluenceState> {
-        ConfluenceDaemonService.kellEntireProcessOnStopNotification = killEntireProcessOnStopNotification
 
         RxPermissions(activity)
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -93,8 +91,8 @@ object Confluence {
         return startedSubject
     }
 
-    fun stop(killEntireProcess: Boolean){
-        ConfluenceDaemonService.stopService(killEntireProcess)
+    fun stop(){
+        ConfluenceDaemonService.stopService()
     }
 
     private fun listenForDaemon() {
