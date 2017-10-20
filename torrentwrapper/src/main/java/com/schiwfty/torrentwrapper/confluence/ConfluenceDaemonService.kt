@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.os.IBinder
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat
+import com.schiwfty.torrentwrapper.confluence.Confluence.stopServiceEvent
 import rx.subjects.PublishSubject
 
 /**
@@ -23,7 +24,6 @@ internal class ConfluenceDaemonService : Service() {
         val ARG_SHOW_STOP = "arg_show_stop_action"
         val ARG_NOTIFICATION_ICON_RES = "arg_notification_icon_resource_id"
         val TAG = "DAEMON_SERVICE_TAG"
-        val stopServiceEvent: PublishSubject<Boolean> = PublishSubject.create()
         var targetIntent: Intent? = null
 
         fun stopService() {
@@ -47,24 +47,20 @@ internal class ConfluenceDaemonService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
 
-        val seed = intent?.getBooleanExtra(ARG_SEED, false) ?: false
-        val showStop = intent?.getBooleanExtra(ARG_SHOW_STOP, false) ?: false
-        Thread {
-            confluencewrapper.Confluencewrapper.androidMain(Confluence.workingDir.absolutePath, seed, ":${Confluence.daemonPort}")
-        }.start()
-
-        val notificationResourceID = intent?.getIntExtra(ARG_NOTIFICATION_ICON_RES, -1) ?: -1
-        val permissionCheck = ContextCompat.checkSelfPermission(this, permission.WRITE_EXTERNAL_STORAGE)
-        if (permissionCheck != PackageManager.PERMISSION_GRANTED) throw IllegalStateException("Cannot start confluence without have write external storage permissions")
-
-        var action: String? = null
-        if (intent != null) {
-            action = intent.action
-        }
         stopServiceEvent.subscribe({ stopService() }, { /*swallow error*/ })
-        if (intent != null && action != null && action == STOP_STRING) {
-            stopService()
+        if (intent != null && intent.action != null && intent.action == STOP_STRING) {
+            stopServiceEvent.onNext(true)
         } else if (intent != null) {
+            val seed = intent.getBooleanExtra(ARG_SEED, false) ?: false
+            val showStop = intent.getBooleanExtra(ARG_SHOW_STOP, false) ?: false
+            Thread {
+                confluencewrapper.Confluencewrapper.androidMain(Confluence.workingDir.absolutePath, seed, ":${Confluence.daemonPort}")
+            }.start()
+
+            val notificationResourceID = intent.getIntExtra(ARG_NOTIFICATION_ICON_RES, -1) ?: -1
+            val permissionCheck = ContextCompat.checkSelfPermission(this, permission.WRITE_EXTERNAL_STORAGE)
+            if (permissionCheck != PackageManager.PERMISSION_GRANTED) throw IllegalStateException("Cannot start confluence without have write external storage permissions")
+
             val builder = NotificationCompat.Builder(this)
                     .setOngoing(true)
                     .setContentText("Daemon running")

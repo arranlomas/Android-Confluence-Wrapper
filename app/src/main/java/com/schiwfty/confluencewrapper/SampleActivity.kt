@@ -147,6 +147,15 @@ class SampleActivity : AppCompatActivity() {
                     })
         }
 
+        Confluence.stopServiceEvent.subscribe {
+//            finish()
+//            Thread{
+//                Thread.sleep(500)
+//                val id = android.os.Process.myPid()
+//                android.os.Process.killProcess(id)
+//            }.start()
+        }
+
         stop_service.setOnClickListener {
             Confluence.stop()
             finish()
@@ -155,7 +164,6 @@ class SampleActivity : AppCompatActivity() {
                 val id = android.os.Process.myPid()
                 android.os.Process.killProcess(id)
             }.start()
-
         }
     }
 }

@@ -33,6 +33,8 @@ object Confluence {
     lateinit var torrentRepository: ITorrentRepository
     lateinit var torrentRepositoryComponent: TorrentRepositoryComponent
 
+    val stopServiceEvent: PublishSubject<Boolean> = PublishSubject.create()
+
     enum class ConfluenceState {
         STARTED,
         WAITING,
