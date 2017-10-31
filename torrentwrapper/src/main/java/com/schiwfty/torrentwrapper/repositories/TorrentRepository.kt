@@ -102,6 +102,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
             }
 
         }
+        if(obs.isEmpty()) return Observable.just(emptyList())
         return Observable.zip(obs.toTypedArray(), {torrentInfo ->
             val torrentInfoList = mutableListOf<TorrentInfo>()
             torrentInfo.forEach {

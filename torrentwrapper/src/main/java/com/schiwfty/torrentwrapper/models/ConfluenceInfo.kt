@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName
 /**
  * Created by arran on 13/05/2017.
  */
-data class ConfluenceInfo(
+internal data class ConfluenceInfo(
         @SerializedName("addr")
         var address: String,
 
