@@ -55,6 +55,7 @@ class SampleActivity : AppCompatActivity() {
                         text_view.text = it?.name
                     }, {
                         text_view.text = it?.localizedMessage
+                        it.printStackTrace()
                     })
         }
 

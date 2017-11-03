@@ -81,19 +81,18 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     override fun downloadTorrentInfo(hash: String): Observable<TorrentInfo?> {
         return confluenceApi.getInfo(hash)
                 .composeIo()
-                .map { it.byteStream() }
+                .map { it.byteStream().readBytes() }
                 .flatMap {
                     val torrentFile = File(Confluence.torrentInfoStorage, "$hash.torrent")
-                    if (!torrentFile.exists()) torrentFile.copyInputStereamToFile(it)
+                    if (!torrentFile.exists()) torrentFile.writeBytes(it)
                     it.getAsTorrentObject()
                 }
     }
 
     override fun getTorrentInfo(hash: String): Observable<TorrentInfo?> {
         val file: File = File(torrentInfoStorage, "$hash.torrent")
-        if (file.isValidTorrentFile()) {
-            return file.getAsTorrentObject()
-        } else return downloadTorrentInfo(hash)
+        if (file.isValidTorrentFile()) return file.getAsTorrentObject()
+        else return downloadTorrentInfo(hash)
     }
 
     override fun getAllTorrentsFromStorage(): Observable<List<TorrentInfo>> {

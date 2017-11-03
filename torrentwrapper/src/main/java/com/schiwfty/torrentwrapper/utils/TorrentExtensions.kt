@@ -36,10 +36,10 @@ fun File.getAsTorrentObject(): Observable<TorrentInfo?> {
     }
 }
 
-fun InputStream.getAsTorrentObject(): Observable<TorrentInfo?> {
+fun ByteArray.getAsTorrentObject(): Observable<TorrentInfo?> {
     val obs: Observable<TorrentInfo?>
     try {
-        obs = TorrentParser.parseTorrent(this.readBytes())
+        obs = TorrentParser.parseTorrent(this)
     } catch (e: Exception) {
         return Observable.just(null).map { throw e }
     }
