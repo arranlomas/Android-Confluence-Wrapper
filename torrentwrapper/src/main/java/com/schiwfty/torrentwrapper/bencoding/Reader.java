@@ -32,6 +32,10 @@ public class Reader {
         datablob = IOUtils.toByteArray(new FileInputStream(file));
     }
 
+    public Reader(byte[] byteArray) throws IOException {
+        datablob = byteArray;
+    }
+
     public Reader(String s) {
         datablob = s.getBytes();
     }

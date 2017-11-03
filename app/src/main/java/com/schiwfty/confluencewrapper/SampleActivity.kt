@@ -42,43 +42,52 @@ class SampleActivity : AppCompatActivity() {
 
         get_status.setOnClickListener {
             torrentRepository.getStatus()
-                    .subscribe {
-                        text_view.text = it.toString()
-                    }
+                    .subscribe ({
+                        text_view.text = it
+                    }, {
+                        text_view.text = it?.localizedMessage
+                    })
         }
 
         download_info.setOnClickListener {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
-                    .subscribe {
+                    .subscribe ({
                         text_view.text = it?.name
-                    }
+                    }, {
+                        text_view.text = it?.localizedMessage
+                    })
         }
 
         get_info.setOnClickListener {
             torrentRepository.getTorrentInfo(hashUnderTest)
-                    .subscribe {
+                    .subscribe ({
                         text_view.text = it?.name
-                    }
+                    }, {
+                        text_view.text = it?.localizedMessage
+                    })
         }
 
         start_download.setOnClickListener {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
                     .map { it?.fileList?.last()?.let { torrentRepository.startFileDownloading(it, this, true) } }
-                    .subscribe {
+                    .subscribe ({
                         text_view.text = "download started"
-
-                    }
+                    }, {
+                        text_view.text = it?.localizedMessage
+                    })
         }
 
         open_file.setOnClickListener {
             torrentRepository.getTorrentInfo(hashUnderTest)
-                    .subscribe {
+                    .subscribe ({
                         it?.fileList?.last()?.let {
                             it.openFile(this, torrentRepository, {
                                 text_view.text = "no activity to open file"
                             })
                         }
-                    }
+                    }, {
+                        text_view.text = it?.localizedMessage
+                    })
         }
 
         get_torrent_file.setOnClickListener {
@@ -147,19 +156,23 @@ class SampleActivity : AppCompatActivity() {
                     })
         }
 
-        Confluence.stopServiceEvent.subscribe {
-//            finish()
-//            Thread{
-//                Thread.sleep(500)
-//                val id = android.os.Process.myPid()
-//                android.os.Process.killProcess(id)
-//            }.start()
+        delete_torrent_info.setOnClickListener {
+            torrentRepository.getAllTorrentsFromStorage()
+                    .flatMapIterable { it }
+                    .map { torrentRepository.deleteTorrentInfoFromStorage(it) }
+                    .subscribe({
+                        text_view.text = "deleted"
+                    }, {
+                        text_view.text = it.localizedMessage
+                    })
         }
+
+
 
         stop_service.setOnClickListener {
             Confluence.stop()
             finish()
-            Thread{
+            Thread {
                 Thread.sleep(500)
                 val id = android.os.Process.myPid()
                 android.os.Process.killProcess(id)

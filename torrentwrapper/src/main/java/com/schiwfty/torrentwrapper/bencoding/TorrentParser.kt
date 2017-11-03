@@ -19,10 +19,20 @@ object TorrentParser {
     @Throws(IOException::class)
     fun parseTorrent(filePath: String): Observable<TorrentInfo?> {
         val r = Reader(File(filePath))
+        return parseReader(r)
+    }
+
+    @Throws(IOException::class)
+    fun parseTorrent(byteArray: ByteArray): Observable<TorrentInfo?> {
+        val r = Reader(byteArray)
+        return parseReader(r)
+    }
+
+    private fun parseReader(r: Reader): Observable<TorrentInfo?> {
         val x: List<IBencodable>
         try {
             x = r.read()
-        }catch (e: Exception){
+        } catch (e: Exception) {
             return Observable.just(null).map { throw e }
         }
 
@@ -35,7 +45,7 @@ object TorrentParser {
     private fun parseTorrent(o: Any): Observable<TorrentInfo?> {
         if (o is BDictionary) {
             val torrentDictionary = o
-            val infoDictionary = parseInfoDictionary(torrentDictionary) ?: throw IllegalStateException("info dictionary is null")
+            val infoDictionary = parseInfoDictionary(torrentDictionary) ?: torrentDictionary
 
             val t = TorrentInfo()
             t.name = parseTorrentName(infoDictionary)

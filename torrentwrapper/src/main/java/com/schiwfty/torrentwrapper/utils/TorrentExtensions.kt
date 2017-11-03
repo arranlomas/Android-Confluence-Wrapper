@@ -24,34 +24,50 @@ import java.util.regex.Pattern
  * Created by arran on 30/04/2017.
  */
 fun File.getAsTorrentObject(): Observable<TorrentInfo?> {
-    if (!isValidTorrentFile()) return Observable.just(null).map { throw IllegalArgumentException("File is not a valid torrent File") }
+    if (!isValidTorrentFile()) return Observable.just(null)
     val obs: Observable<TorrentInfo?>
     try {
         obs = TorrentParser.parseTorrent(this.absolutePath)
-    }catch (e: Exception){
+    } catch (e: Exception) {
         return Observable.just(null).map { throw e }
     }
     return obs.map { torrentInfo ->
-                if (torrentInfo?.totalSize == 0L && torrentInfo.fileList.size > 1) {
-                    torrentInfo.fileList.forEach {
-                        torrentInfo.totalSize += it.fileLength ?: 0
-                    }
-                }
-                if (torrentInfo?.singleFileTorrent ?: false) {
-                    if (torrentInfo?.totalSize != null) {
-                        val paths: LinkedList<String> = LinkedList(listOf(torrentInfo.name))
-                        val torrentFile = TorrentFile()
-                        torrentFile.fileLength = torrentInfo.totalSize
-                        torrentFile.fileDirs = paths
-                        torrentFile.torrentHash = torrentInfo.info_hash
-                        torrentFile.primaryKey = "${torrentInfo.info_hash}${paths.concatStrings()}"
-                        Log.v("generated primaryKey:", "Torrent: ${torrentInfo.name}   File: ${paths.last}     primaryKey: ${torrentInfo.info_hash}${paths.concatStrings()}")
-                        torrentInfo.fileList = listOf(torrentFile)
-                    }
-                }
-                torrentInfo
-            }
+        torrentInfo?.mapTorrentFilesToTorrentInfo()
+    }
 }
+
+fun InputStream.getAsTorrentObject(): Observable<TorrentInfo?> {
+    val obs: Observable<TorrentInfo?>
+    try {
+        obs = TorrentParser.parseTorrent(this.readBytes())
+    } catch (e: Exception) {
+        return Observable.just(null).map { throw e }
+    }
+    return obs.map { torrentInfo ->
+        torrentInfo?.mapTorrentFilesToTorrentInfo()
+    }
+}
+
+private fun TorrentInfo.mapTorrentFilesToTorrentInfo(): TorrentInfo {
+    val torrentInfo = this
+    if (torrentInfo.totalSize == 0L && torrentInfo.fileList.size > 1) {
+        torrentInfo.fileList.forEach {
+            torrentInfo.totalSize += it.fileLength ?: 0
+        }
+    }
+    if (torrentInfo.singleFileTorrent) {
+        val paths: LinkedList<String> = LinkedList(listOf(torrentInfo.name))
+        val torrentFile = TorrentFile()
+        torrentFile.fileLength = torrentInfo.totalSize
+        torrentFile.fileDirs = paths
+        torrentFile.torrentHash = torrentInfo.info_hash
+        torrentFile.primaryKey = "${torrentInfo.info_hash}${paths.concatStrings()}"
+        Log.v("generated primaryKey:", "Torrent: ${torrentInfo.name}   File: ${paths.last}     primaryKey: ${torrentInfo.info_hash}${paths.concatStrings()}")
+        torrentInfo.fileList = listOf(torrentFile)
+    }
+    return torrentInfo
+}
+
 
 fun Long.formatBytesAsSize(): String {
     if (this > 0.1 * 1024.0 * 1024.0 * 1024.0) {

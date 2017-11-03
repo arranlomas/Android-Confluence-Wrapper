@@ -1,100 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.schiwfty.confluencewrapper.SampleActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:context="com.schiwfty.confluencewrapper.SampleActivity">
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <LinearLayout
+            android:id="@+id/buttons"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/buttons"
             android:orientation="vertical"
             android:visibility="visible">
 
             <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:id="@+id/get_status"
-                android:text="get status"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="get status" />
+
+            <Button
                 android:id="@+id/download_info"
-                android:text="download torrent info"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="download torrent info" />
+
+            <Button
                 android:id="@+id/get_info"
-                android:text="get torrent info"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="get torrent info" />
+
+            <Button
                 android:id="@+id/start_download"
-                android:text="start file downloading"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="start file downloading" />
+
+            <Button
                 android:id="@+id/open_file"
-                android:text="open file downloading"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="open file downloading" />
+
+            <Button
                 android:id="@+id/get_torrent_file"
-                android:text="get a torrent file"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="get a torrent file" />
+
+            <Button
                 android:id="@+id/add_torrent"
-                android:text="add a torrent file"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="add a torrent file" />
+
+            <Button
                 android:id="@+id/post_torrent_info"
-                android:text="create torrent file from torrentInfo object"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="create torrent file from torrentInfo object" />
+
+            <Button
                 android:id="@+id/clear_persistence"
-                android:text="clear persistence"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="clear persistence" />
+
+            <Button
                 android:id="@+id/post_test_torrent"
-                android:text="post test torrent"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="post test torrent" />
+
+            <Button
                 android:id="@+id/verify_data"
-                android:text="verify data"/>
-
-            <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/get_all_torrents"
-            android:text="get all torrents from storage"/>
-
-            <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="verify data" />
+
+            <Button
+                android:id="@+id/get_all_torrents"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="get all torrents from storage" />
+
+            <Button
+                android:id="@+id/delete_torrent_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Delete all torrent info from storage" />
+
+            <Button
                 android:id="@+id/stop_service"
-                android:text="Stop the client"/>
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Stop the client" />
 
             <TextView
                 android:id="@+id/text_view"
