@@ -7,15 +7,15 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
-import com.schiwfty.torrentwrapper.utils.ParseTorrentResult
-import com.schiwfty.torrentwrapper.utils.getFullPath
-import com.schiwfty.torrentwrapper.utils.getMagnetLink
-import com.schiwfty.torrentwrapper.utils.openFile
+import com.schiwfty.torrentwrapper.utils.*
 import kotlinx.android.synthetic.main.activity_sample.*
 import java.io.File
 
 class SampleActivity : AppCompatActivity() {
     lateinit var torrentRepository: ITorrentRepository
+
+    val testMagnet = "magnet:?xt=urn:btih:DQZJ2MJHQN2XZEWGQNRTIWR56ZNKGM3C&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechersparadise.org:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://open.stealth.si:80/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=udp://mgtracker.org:6969/announce&tr=udp://tracker.tiny-vps.com:6969/announce&tr=udp://peerfect.org:6969/announce&tr=http://share.camoe.cn:8080/announce&tr=http://t.nyaatracker.com:80/announce&tr=https://open.kickasstracker.com:443/announce"
+    val validMagnet = "magnet:?xt=urn:btih:3ac1e9fb84a728b32ef953075c203e47c25069d3&dn=Super+Mario+Bros+3+for+Android+v1.0&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Fzer0day.ch%3A1337&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969"
 
     val hashUnderTest = "2eb734e872a0ecf8929633b7aa4825c7f8c354f8"
 //    val hashUnderTest = "3ac1e9fb84a728b32ef953075c203e47c25069d3"
@@ -189,6 +189,16 @@ class SampleActivity : AppCompatActivity() {
                 val id = android.os.Process.myPid()
                 android.os.Process.killProcess(id)
             }.start()
+        }
+
+        test_magnet.setOnClickListener {
+            val hash = testMagnet.findHashFromMagnet()
+            torrentRepository.downloadTorrentInfo(hash!!)
+                    .subscribe({
+                        it.unwrapIfSuccess { text_view.text = "torrents: ${it.name}" }
+                    }, {
+                        text_view.text = it.localizedMessage
+                    })
         }
     }
 }

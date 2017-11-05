@@ -101,6 +101,12 @@
                 android:layout_height="wrap_content"
                 android:text="Stop the client" />
 
+            <Button
+                android:id="@+id/test_magnet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="test the dodgy magnet" />
+
             <TextView
                 android:id="@+id/text_view"
                 android:layout_width="match_parent"

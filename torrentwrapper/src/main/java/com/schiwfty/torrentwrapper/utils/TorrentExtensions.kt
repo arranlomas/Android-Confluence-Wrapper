@@ -3,6 +3,7 @@ package com.schiwfty.torrentwrapper.utils
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Base64
 import android.util.Log
 import android.webkit.MimeTypeMap
 import com.schiwfty.torrentwrapper.bencoding.TorrentCreator
@@ -11,6 +12,8 @@ import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
+import org.apache.commons.codec.binary.Base32
+import org.apache.commons.codec.binary.Hex
 import rx.Observable
 import java.io.*
 import java.net.URLDecoder
@@ -39,7 +42,7 @@ private fun getAsTorrentObject(torrentParseMethod: () -> Observable<ParseTorrent
         return Observable.just(ParseTorrentResult.Error(e))
     }
     return obs.map { parseResult ->
-        when (parseResult){
+        when (parseResult) {
             is ParseTorrentResult.Success -> ParseTorrentResult.Success(parseResult.unwrapIfSuccess { it.mapTorrentFilesToTorrentInfo() })
             is ParseTorrentResult.Error -> parseResult
         }
@@ -103,9 +106,16 @@ fun Long.formatBytesAsSize(): String {
 fun String.findHashFromMagnet(): String? {
     val pattern = Pattern.compile("xt=urn:btih:(.*?)(&|$)")
     val matcher = pattern.matcher(this)
-    if (matcher.find())
-        return matcher.group(1)
-    else
+    if (matcher.find()) {
+        val initialHash = matcher.group(1)
+        if(initialHash.length == 40) return initialHash
+        if(initialHash.length == 32) {
+            val decoded = Base32().decode(initialHash)
+            val hexString = Hex.encodeHex(decoded)
+            return String(hexString)
+        }
+        return null
+    } else
         return null
 }
 
