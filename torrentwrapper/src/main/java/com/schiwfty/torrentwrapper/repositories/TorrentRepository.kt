@@ -21,7 +21,6 @@ import rx.subjects.PublishSubject
 import java.io.File
 import java.io.FileInputStream
 
-
 /**
  * Created by arran on 29/04/2017.
  */
@@ -78,30 +77,25 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                 .composeIo()
     }
 
-    override fun downloadTorrentInfo(hash: String): Observable<ParseTorrentResult> {
+    override fun downloadTorrentInfo(hash: String, deleteErroneousTorrents: Boolean): Observable<ParseTorrentResult> {
+        val torrentFile = File(Confluence.torrentInfoStorage, "$hash.torrent")
         return confluenceApi.getInfo(hash)
-                .composeIo()
                 .map { it.byteStream().readBytes() }
                 .flatMap {
-                    val torrentFile = File(Confluence.torrentInfoStorage, "$hash.torrent")
                     if (!torrentFile.exists()) torrentFile.writeBytes(it)
-                    it.getAsTorrentObject()
+                    it.getAsTorrentObject().mapDeleteFileOnError(torrentFile,  deleteErroneousTorrents)
                 }
+                .map { if (it is ParseTorrentResult.Error) throw InvalidTorrentException(it.exception); it }
+                .composeIo()
+                .retryWhenInvalidTorrent(torrentFile)
     }
 
-    override fun getTorrentInfo(hash: String): Observable<ParseTorrentResult> {
-        val file: File = File(torrentInfoStorage, "$hash.torrent")
-        if (file.isValidTorrentFile()) return file.getAsTorrentObject()
-        else return downloadTorrentInfo(hash)
-    }
-
-    override fun getAllTorrentsFromStorage(): Observable<List<ParseTorrentResult>> {
+    override fun getAllTorrentsFromStorage(deleteErroneousTorrents: Boolean): Observable<List<ParseTorrentResult>> {
         val obs: MutableList<Observable<ParseTorrentResult>> = mutableListOf()
-        torrentInfoStorage.walkTopDown().iterator().forEach {
-            if (it.isValidTorrentFile()) {
-                obs.add(it.getAsTorrentObject())
+        torrentInfoStorage.walkTopDown().iterator().forEach { file ->
+            if (file.isValidTorrentFile()) {
+                obs.add(file.getAsTorrentObject().mapDeleteFileOnError(file, deleteErroneousTorrents))
             }
-
         }
         if (obs.isEmpty()) return Observable.just(emptyList())
         return Observable.zip(obs.toTypedArray(), { parseResult ->
@@ -111,6 +105,13 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
             }
             resultList.toList()
         })
+    }
+
+    private fun <T>Observable<T>.mapDeleteFileOnError(file: File, deleteErroneousTorrents: Boolean = true): Observable<T>{
+        return this.map {
+            if (it is ParseTorrentResult.Error && deleteErroneousTorrents) file.delete()
+            it
+        }
     }
 
     override fun postTorrentFile(hash: String, file: File): Observable<ResponseBody> {

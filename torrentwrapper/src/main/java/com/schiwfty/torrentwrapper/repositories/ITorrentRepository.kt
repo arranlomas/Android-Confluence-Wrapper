@@ -31,9 +31,7 @@ interface ITorrentRepository {
     //returns the file state
     fun getFileState(torrentFile: TorrentFile): Observable<Pair<TorrentFile, List<FileStatePiece>>>
 
-    fun downloadTorrentInfo(hash: String): Observable<ParseTorrentResult>
-
-    fun getTorrentInfo(hash: String): Observable<ParseTorrentResult>
+    fun downloadTorrentInfo(hash: String, deleteErroneousTorrents: Boolean = false): Observable<ParseTorrentResult>
 
     fun startFileDownloading(torrentFile: TorrentFile, context: Context, wifiOnly: Boolean)
 
@@ -44,7 +42,7 @@ interface ITorrentRepository {
     fun addTorrentFileToPersistence(torrentFile: TorrentFile)
 
     //returns all the torrent files that are in the confluence/torrent folder that was created by go-confluence
-    fun getAllTorrentsFromStorage(): Observable<List<ParseTorrentResult>>
+    fun getAllTorrentsFromStorage(deleteErroneousTorrents: Boolean = false): Observable<List<ParseTorrentResult>>
 
     //returns all torrent files in persistence
     fun getDownloadingFilesFromPersistence(): Observable<List<TorrentFile>>

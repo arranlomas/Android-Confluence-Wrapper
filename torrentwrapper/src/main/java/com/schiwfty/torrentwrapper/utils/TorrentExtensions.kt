@@ -19,7 +19,6 @@ import java.security.MessageDigest
 import java.util.*
 import java.util.regex.Pattern
 
-
 /**
  * Created by arran on 30/04/2017.
  */
