@@ -23,28 +23,47 @@ import java.util.regex.Pattern
 /**
  * Created by arran on 30/04/2017.
  */
-fun File.getAsTorrentObject(): Observable<TorrentInfo?> {
-    if (!isValidTorrentFile()) return Observable.just(null)
-    val obs: Observable<TorrentInfo?>
+fun File.getAsTorrentObject(): Observable<ParseTorrentResult> {
+    if (!isValidTorrentFile()) return Observable.just(ParseTorrentResult.Error(IllegalArgumentException("Not a valid torrent file")))
+    return getAsTorrentObject { TorrentParser.parseTorrent(this.absolutePath) }
+}
+
+fun ByteArray.getAsTorrentObject(): Observable<ParseTorrentResult> {
+    return getAsTorrentObject { TorrentParser.parseTorrent(this) }
+}
+
+private fun getAsTorrentObject(torrentParseMethod: () -> Observable<ParseTorrentResult>): Observable<ParseTorrentResult> {
+    val obs: Observable<ParseTorrentResult>
     try {
-        obs = TorrentParser.parseTorrent(this.absolutePath)
+        obs = torrentParseMethod.invoke()
     } catch (e: Exception) {
-        return Observable.just(null).map { throw e }
+        return Observable.just(ParseTorrentResult.Error(e))
     }
-    return obs.map { torrentInfo ->
-        torrentInfo?.mapTorrentFilesToTorrentInfo()
+    return obs.map { parseResult ->
+        when (parseResult){
+            is ParseTorrentResult.Success -> ParseTorrentResult.Success(parseResult.unwrapIfSuccess { it.mapTorrentFilesToTorrentInfo() })
+            is ParseTorrentResult.Error -> parseResult
+        }
     }
 }
 
-fun ByteArray.getAsTorrentObject(): Observable<TorrentInfo?> {
-    val obs: Observable<TorrentInfo?>
-    try {
-        obs = TorrentParser.parseTorrent(this)
-    } catch (e: Exception) {
-        return Observable.just(null).map { throw e }
+sealed class ParseTorrentResult {
+    data class Success(val torrentInfo: TorrentInfo?) : ParseTorrentResult()
+    data class Error(val exception: Exception) : ParseTorrentResult()
+
+    fun <T> unwrapIfSuccess(isSuccess: (TorrentInfo) -> T, isError: ((Exception) -> Unit)? = null): T? {
+        when (this) {
+            is Success -> this.torrentInfo?.let { return isSuccess.invoke(it) }
+            is Error -> isError?.invoke(this.exception)
+        }
+        return null
     }
-    return obs.map { torrentInfo ->
-        torrentInfo?.mapTorrentFilesToTorrentInfo()
+
+    fun <T> unwrapIfSuccess(isSuccess: (TorrentInfo) -> T): T? {
+        when (this) {
+            is Success -> this.torrentInfo?.let { return isSuccess.invoke(it) }
+        }
+        return null
     }
 }
 

@@ -1,16 +1,15 @@
 package com.schiwfty.torrentwrapper.repositories
 
-import android.app.Activity
 import android.content.Context
+import com.schiwfty.torrentwrapper.models.FileStatePiece
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
-import com.schiwfty.torrentwrapper.models.ConfluenceInfo
-import com.schiwfty.torrentwrapper.models.FileStatePiece
+import com.schiwfty.torrentwrapper.utils.ParseTorrentResult
 import com.schiwfty.torrentwrapper.utils.defaultAnnounceList
 import okhttp3.ResponseBody
 import rx.Observable
-import java.io.File
 import rx.subjects.PublishSubject
+import java.io.File
 
 /**
  * Created by arran on 29/04/2017.
@@ -32,9 +31,9 @@ interface ITorrentRepository {
     //returns the file state
     fun getFileState(torrentFile: TorrentFile): Observable<Pair<TorrentFile, List<FileStatePiece>>>
 
-    fun downloadTorrentInfo(hash: String): Observable<TorrentInfo?>
+    fun downloadTorrentInfo(hash: String): Observable<ParseTorrentResult>
 
-    fun getTorrentInfo(hash: String): Observable<TorrentInfo?>
+    fun getTorrentInfo(hash: String): Observable<ParseTorrentResult>
 
     fun startFileDownloading(torrentFile: TorrentFile, context: Context, wifiOnly: Boolean)
 
@@ -45,7 +44,7 @@ interface ITorrentRepository {
     fun addTorrentFileToPersistence(torrentFile: TorrentFile)
 
     //returns all the torrent files that are in the confluence/torrent folder that was created by go-confluence
-    fun getAllTorrentsFromStorage(): Observable<List<TorrentInfo>>
+    fun getAllTorrentsFromStorage(): Observable<List<ParseTorrentResult>>
 
     //returns all torrent files in persistence
     fun getDownloadingFilesFromPersistence(): Observable<List<TorrentFile>>

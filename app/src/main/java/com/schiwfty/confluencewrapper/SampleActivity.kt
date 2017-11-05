@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
+import com.schiwfty.torrentwrapper.utils.ParseTorrentResult
 import com.schiwfty.torrentwrapper.utils.getFullPath
 import com.schiwfty.torrentwrapper.utils.getMagnetLink
 import com.schiwfty.torrentwrapper.utils.openFile
@@ -23,7 +24,7 @@ class SampleActivity : AppCompatActivity() {
         setContentView(R.layout.activity_sample)
         val directoryPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path + File.separator + "wrapper_test"
 
-        Confluence.install(applicationContext, directoryPath, 7070)
+        Confluence.install(applicationContext, directoryPath, 8081)
         torrentRepository = Confluence.torrentRepository
 
         torrentRepository.isConnected()
@@ -42,7 +43,7 @@ class SampleActivity : AppCompatActivity() {
 
         get_status.setOnClickListener {
             torrentRepository.getStatus()
-                    .subscribe ({
+                    .subscribe({
                         text_view.text = it
                     }, {
                         text_view.text = it?.localizedMessage
@@ -51,8 +52,8 @@ class SampleActivity : AppCompatActivity() {
 
         download_info.setOnClickListener {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
-                    .subscribe ({
-                        text_view.text = it?.name
+                    .subscribe({
+                        it.unwrapIfSuccess { text_view.text = it.name }
                     }, {
                         text_view.text = it?.localizedMessage
                         it.printStackTrace()
@@ -61,8 +62,8 @@ class SampleActivity : AppCompatActivity() {
 
         get_info.setOnClickListener {
             torrentRepository.getTorrentInfo(hashUnderTest)
-                    .subscribe ({
-                        text_view.text = it?.name
+                    .subscribe({
+                        it.unwrapIfSuccess { text_view.text = it.name }
                     }, {
                         text_view.text = it?.localizedMessage
                     })
@@ -70,8 +71,8 @@ class SampleActivity : AppCompatActivity() {
 
         start_download.setOnClickListener {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
-                    .map { it?.fileList?.last()?.let { torrentRepository.startFileDownloading(it, this, true) } }
-                    .subscribe ({
+                    .map { it.unwrapIfSuccess { torrentRepository.startFileDownloading(it.fileList.last(), this, true) } }
+                    .subscribe({
                         text_view.text = "download started"
                     }, {
                         text_view.text = it?.localizedMessage
@@ -80,11 +81,13 @@ class SampleActivity : AppCompatActivity() {
 
         open_file.setOnClickListener {
             torrentRepository.getTorrentInfo(hashUnderTest)
-                    .subscribe ({
-                        it?.fileList?.last()?.let {
-                            it.openFile(this, torrentRepository, {
-                                text_view.text = "no activity to open file"
-                            })
+                    .subscribe({
+                        it.unwrapIfSuccess{
+                            it.fileList.last().let {
+                                it.openFile(this, torrentRepository, {
+                                    text_view.text = "no activity to open file"
+                                })
+                            }
                         }
                     }, {
                         text_view.text = it?.localizedMessage
@@ -93,7 +96,9 @@ class SampleActivity : AppCompatActivity() {
 
         get_torrent_file.setOnClickListener {
             torrentRepository.getTorrentInfo(hashUnderTest)
-                    .map { torrentRepository.getTorrentFileFromPersistence(it!!.info_hash, it.fileList.last().getFullPath()) }
+                    .map {
+                        it.unwrapIfSuccess ({ torrentRepository.getTorrentFileFromPersistence(it.info_hash, it.fileList.last().getFullPath()) }, { throw IllegalStateException("Could not read torrent")})
+                    }
                     .subscribe {
                         it?.primaryKey.let { text_view.text = "primary key = $it" }
                     }
@@ -151,7 +156,9 @@ class SampleActivity : AppCompatActivity() {
         get_all_torrents.setOnClickListener {
             torrentRepository.getAllTorrentsFromStorage()
                     .subscribe({
-                        text_view.text = "all torrents: ${it.size}"
+                        val success = it.filter { it is ParseTorrentResult.Success }
+                        val error = it.filter { it is ParseTorrentResult.Error }
+                        text_view.text = "success torrents: ${success.size}\nerror torrents: ${error.size}"
                     }, {
                         text_view.text = it.localizedMessage
                     })
@@ -160,7 +167,10 @@ class SampleActivity : AppCompatActivity() {
         delete_torrent_info.setOnClickListener {
             torrentRepository.getAllTorrentsFromStorage()
                     .flatMapIterable { it }
-                    .map { torrentRepository.deleteTorrentInfoFromStorage(it) }
+                    .filter { it is ParseTorrentResult.Success }
+                    .map { (it as ParseTorrentResult.Success) }
+                    .map { it.torrentInfo }
+                    .map { it?.let { torrentRepository.deleteTorrentInfoFromStorage(it) } }
                     .subscribe({
                         text_view.text = "deleted"
                     }, {
@@ -168,7 +178,12 @@ class SampleActivity : AppCompatActivity() {
                     })
         }
 
-
+        torrentRepository.getAllTorrentsFromStorage()
+                .subscribe({
+                    text_view.text = "torrents: ${it.size}"
+                }, {
+                    text_view.text = it.localizedMessage
+                })
 
         stop_service.setOnClickListener {
             Confluence.stop()
