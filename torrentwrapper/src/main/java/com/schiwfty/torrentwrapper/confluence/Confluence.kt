@@ -81,7 +81,7 @@ object Confluence {
                 .flatMap { torrentRepository.isConnected() }
                 .subscribe({ connected ->
                     if (!connected) {
-                        ConfluenceDaemonService.start(activity, notificationResourceId, seed, showStopAction , targetIntent)
+                        ConfluenceDaemonService.start(activity, notificationResourceId, "channelId", "channelName", seed, showStopAction , targetIntent)
                         listenForDaemon()
                     } else {
                         subscriptions.unsubscribe()
