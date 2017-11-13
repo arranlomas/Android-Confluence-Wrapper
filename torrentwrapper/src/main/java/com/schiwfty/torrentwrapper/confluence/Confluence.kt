@@ -63,6 +63,8 @@ object Confluence {
 
     fun start(activity: Activity,
               notificationResourceId: Int,
+              channelId: String? = null,
+              channelName: String? = null,
               seed: Boolean = false,
               showStopAction: Boolean = false,
               targetIntent: Intent? = null,
@@ -71,7 +73,7 @@ object Confluence {
         RxPermissions(activity)
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 .map {
-                    if (it !=null && it) {
+                    if (it != null && it) {
                         workingDir.mkdirs()
                         torrentInfoStorage.mkdirs()
                     } else {
@@ -81,7 +83,7 @@ object Confluence {
                 .flatMap { torrentRepository.isConnected() }
                 .subscribe({ connected ->
                     if (!connected) {
-                        ConfluenceDaemonService.start(activity, notificationResourceId, "channelId", "channelName", seed, showStopAction , targetIntent)
+                        ConfluenceDaemonService.start(activity, notificationResourceId, channelId, channelName, seed, showStopAction, targetIntent)
                         listenForDaemon()
                     } else {
                         subscriptions.unsubscribe()
@@ -93,7 +95,7 @@ object Confluence {
         return startedSubject
     }
 
-    fun stop(){
+    fun stop() {
         ConfluenceDaemonService.stopService()
     }
 

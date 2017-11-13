@@ -32,7 +32,7 @@ class SampleActivity : AppCompatActivity() {
                 .subscribe { Log.v("is connected", "$it") }
 
         val pendingIntent = Intent(this, SampleActivity::class.java)
-        Confluence.start(this, R.mipmap.ic_launcher, true, true, pendingIntent)
+        Confluence.start(this, R.mipmap.ic_launcher, "channelId", "channelName", true, true, pendingIntent)
                 .map { Log.v("confluence state", it.name) }
                 .flatMap { torrentRepository.isConnected(); }
                 .subscribe {
@@ -83,7 +83,7 @@ class SampleActivity : AppCompatActivity() {
         open_file.setOnClickListener {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
                     .subscribe({
-                        it.unwrapIfSuccess{
+                        it.unwrapIfSuccess {
                             it.fileList.last().let {
                                 it.openFile(this, torrentRepository, {
                                     text_view.text = "no activity to open file"
@@ -98,7 +98,7 @@ class SampleActivity : AppCompatActivity() {
         get_torrent_file.setOnClickListener {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
                     .map {
-                        it.unwrapIfSuccess ({ torrentRepository.getTorrentFileFromPersistence(it.info_hash, it.fileList.last().getFullPath()) }, { throw IllegalStateException("Could not read torrent")})
+                        it.unwrapIfSuccess({ torrentRepository.getTorrentFileFromPersistence(it.info_hash, it.fileList.last().getFullPath()) }, { throw IllegalStateException("Could not read torrent") })
                     }
                     .subscribe {
                         it?.primaryKey.let { text_view.text = "primary key = $it" }
