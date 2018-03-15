@@ -14,7 +14,7 @@ import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
 import org.apache.commons.codec.binary.Base32
 import org.apache.commons.codec.binary.Hex
-import rx.Observable
+import io.reactivex.Observable
 import java.io.*
 import java.net.URLDecoder
 import java.net.URLEncoder

@@ -2,12 +2,10 @@ package com.schiwfty.torrentwrapper.retrofit
 
 
 import com.schiwfty.torrentwrapper.models.FileStatePiece
-import com.schiwfty.torrentwrapper.utils.composeIo
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
-import rx.Observable
-
+import io.reactivex.Observable
 
 /**
  * Created by arran on 4/02/2017.

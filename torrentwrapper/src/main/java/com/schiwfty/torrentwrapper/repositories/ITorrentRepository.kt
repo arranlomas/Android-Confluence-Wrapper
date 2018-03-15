@@ -6,9 +6,9 @@ import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.utils.ParseTorrentResult
 import com.schiwfty.torrentwrapper.utils.defaultAnnounceList
+import io.reactivex.Observable
+import io.reactivex.subjects.PublishSubject
 import okhttp3.ResponseBody
-import rx.Observable
-import rx.subjects.PublishSubject
 import java.io.File
 
 /**

@@ -72,7 +72,10 @@ class SampleActivity : AppCompatActivity() {
 
         start_download.setOnClickListener {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
-                    .map { it.unwrapIfSuccess { torrentRepository.startFileDownloading(it.fileList.last(), this, true) } }
+                    .map {
+                        it.unwrapIfSuccess { torrentRepository.startFileDownloading(it.fileList.last(), this, true) }
+                                ?: throw IllegalStateException("could not unwrap torrent")
+                    }
                     .subscribe({
                         text_view.text = "download started"
                     }, {
@@ -98,7 +101,10 @@ class SampleActivity : AppCompatActivity() {
         get_torrent_file.setOnClickListener {
             torrentRepository.downloadTorrentInfo(hashUnderTest)
                     .map {
-                        it.unwrapIfSuccess({ torrentRepository.getTorrentFileFromPersistence(it.info_hash, it.fileList.last().getFullPath()) }, { throw IllegalStateException("Could not read torrent") })
+                        it.unwrapIfSuccess({
+                            torrentRepository.getTorrentFileFromPersistence(it.info_hash, it.fileList.last().getFullPath())
+                        }, { throw IllegalStateException("Could not read torrent") })
+                                ?: throw IllegalStateException("Could not read torrent")
                     }
                     .subscribe {
                         it?.primaryKey.let { text_view.text = "primary key = $it" }
@@ -165,7 +171,7 @@ class SampleActivity : AppCompatActivity() {
                     .flatMapIterable { it }
                     .filter { it is ParseTorrentResult.Success }
                     .map { (it as ParseTorrentResult.Success) }
-                    .map { it.torrentInfo }
+                    .map { it.torrentInfo ?: throw IllegalStateException("Could not read torrent") }
                     .map { it?.let { torrentRepository.deleteTorrentInfoFromStorage(it) } }
                     .subscribe({
                         text_view.text = "deleted"

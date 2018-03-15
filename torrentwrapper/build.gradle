@@ -41,14 +41,14 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
     //RX
-    compile 'io.reactivex:rxkotlin:1.0.0'
-    compile 'io.reactivex:rxandroid:1.2.1'
+    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+    compile 'io.reactivex.rxjava2:rxkotlin:2.1.0'
 
     //RETROFIT
-    compile 'com.squareup.retrofit2:retrofit:2.1.0'
-    compile 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
+    compile 'com.squareup.retrofit2:retrofit:2.3.0'
     compile 'com.squareup.okhttp3:logging-interceptor:3.8.0'
-    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava2:2.3.0'
 
     // IOUTILS
     compile group: 'commons-io', name: 'commons-io', version: '2.5'
@@ -58,7 +58,7 @@ dependencies {
     compile 'com.uphyca:stetho_realm:2.0.1'
 
     //RXPERMISSIONS
-    compile 'com.tbruyelle.rxpermissions:rxpermissions:0.9.3@aar'
+    compile 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.5@aar'
 
     //DAGGER2
     compile 'com.google.dagger:dagger:2.9'

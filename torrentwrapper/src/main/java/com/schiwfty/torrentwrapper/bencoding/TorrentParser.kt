@@ -6,7 +6,7 @@ import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.utils.ParseTorrentResult
 import com.schiwfty.torrentwrapper.utils.concatStrings
-import rx.Observable
+import io.reactivex.Observable
 import java.io.File
 import java.io.IOException
 import java.text.ParseException

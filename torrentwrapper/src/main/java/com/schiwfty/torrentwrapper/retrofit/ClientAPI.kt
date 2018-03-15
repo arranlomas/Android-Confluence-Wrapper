@@ -9,7 +9,7 @@ import com.schiwfty.torrentwrapper.models.FileStatePiece
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.http.*
-import rx.Observable
+import io.reactivex.Observable
 
 
 internal interface ClientAPI {

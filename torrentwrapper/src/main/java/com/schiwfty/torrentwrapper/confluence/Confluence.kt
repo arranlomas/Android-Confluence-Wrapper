@@ -10,11 +10,11 @@ import com.schiwfty.torrentwrapper.dagger.network.DaggerTorrentRepositoryCompone
 import com.schiwfty.torrentwrapper.dagger.network.NetworkModule
 import com.schiwfty.torrentwrapper.dagger.network.TorrentRepositoryComponent
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
-import com.tbruyelle.rxpermissions.RxPermissions
+import com.tbruyelle.rxpermissions2.RxPermissions
 import com.uphyca.stetho_realm.RealmInspectorModulesProvider
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.subjects.PublishSubject
 import io.realm.Realm
-import rx.subjects.PublishSubject
-import rx.subscriptions.CompositeSubscription
 import java.io.File
 
 
@@ -29,7 +29,7 @@ object Confluence {
     lateinit var workingDir: File
     lateinit var torrentInfoStorage: File
     val startedSubject = PublishSubject.create<ConfluenceState>()!!
-    val subscriptions = CompositeSubscription()
+    private val subscriptions = CompositeDisposable()
     lateinit var torrentRepository: ITorrentRepository
     lateinit var torrentRepositoryComponent: TorrentRepositoryComponent
 
@@ -72,21 +72,22 @@ object Confluence {
 
         RxPermissions(activity)
                 .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .map {
-                    if (it != null && it) {
+                .flatMap {
+                    if (it) {
                         workingDir.mkdirs()
                         torrentInfoStorage.mkdirs()
                     } else {
                         onPermissionDenied?.invoke()
                     }
+                    torrentRepository.isConnected()
+
                 }
-                .flatMap { torrentRepository.isConnected() }
                 .subscribe({ connected ->
                     if (!connected) {
                         ConfluenceDaemonService.start(activity, notificationResourceId, channelId, channelName, seed, showStopAction, targetIntent)
                         listenForDaemon()
                     } else {
-                        subscriptions.unsubscribe()
+                        subscriptions.dispose()
                         startedSubject.onNext(ConfluenceState.STARTED)
                     }
                 }, {
@@ -103,7 +104,7 @@ object Confluence {
         subscriptions.add(torrentRepository.getStatus()
                 .retry()
                 .subscribe({
-                    subscriptions.unsubscribe()
+                    subscriptions.dispose()
                     startedSubject.onNext(ConfluenceState.STARTED)
                 }, {
                     startedSubject.onNext(ConfluenceState.WAITING)

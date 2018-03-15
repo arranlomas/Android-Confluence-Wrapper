@@ -13,11 +13,13 @@ import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.persistence.ITorrentPersistence
 import com.schiwfty.torrentwrapper.retrofit.ConfluenceApi
 import com.schiwfty.torrentwrapper.utils.*
+import io.reactivex.Observable
+import io.reactivex.functions.BiFunction
+import io.reactivex.functions.Function
+import io.reactivex.subjects.PublishSubject
 import okhttp3.MediaType
 import okhttp3.ResponseBody
 import org.apache.commons.io.IOUtils
-import rx.Observable
-import rx.subjects.PublishSubject
 import java.io.File
 import java.io.FileInputStream
 
@@ -68,7 +70,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
         return confluenceApi.getStatus
                 .composeIo()
                 .map { true }
-                .onErrorResumeNext { Observable.just(false) }
+                .onErrorResumeNext(Function { Observable.just(false) })
     }
 
     override fun getStatus(): Observable<String> {
@@ -83,7 +85,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                 .map { it.byteStream().readBytes() }
                 .flatMap {
                     if (!torrentFile.exists()) torrentFile.writeBytes(it)
-                    it.getAsTorrentObject().mapDeleteFileOnError(torrentFile,  deleteErroneousTorrents)
+                    it.getAsTorrentObject().mapDeleteFileOnError(torrentFile, deleteErroneousTorrents)
                 }
                 .map { if (it is ParseTorrentResult.Error) throw InvalidTorrentException(it.exception); it }
                 .composeIo()
@@ -98,7 +100,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
             }
         }
         if (obs.isEmpty()) return Observable.just(emptyList())
-        return Observable.zip(obs.toTypedArray(), { parseResult ->
+        return Observable.zip(obs, { parseResult ->
             val resultList = mutableListOf<ParseTorrentResult>()
             parseResult.forEach {
                 resultList.add(it as ParseTorrentResult)
@@ -107,7 +109,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
         })
     }
 
-    private fun <T>Observable<T>.mapDeleteFileOnError(file: File, deleteErroneousTorrents: Boolean = true): Observable<T>{
+    private fun <T> Observable<T>.mapDeleteFileOnError(file: File, deleteErroneousTorrents: Boolean = true): Observable<T> {
         return this.map {
             if (it is ParseTorrentResult.Error && deleteErroneousTorrents) file.delete()
             it
@@ -128,12 +130,12 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     }
 
     override fun getFileState(torrentFile: TorrentFile): Observable<Pair<TorrentFile, List<FileStatePiece>>> {
+        val fileStatesObs = confluenceApi.getFileState(torrentFile.torrentHash, torrentFile.getFullPath())
         val torrentFileObs = Observable.just(torrentFile)
-        return Observable.zip(confluenceApi.getFileState(torrentFile.torrentHash, torrentFile.getFullPath()), torrentFileObs, {
-            list, torrentFile ->
-            Pair(torrentFile, list)
-        })
-                .composeIo()
+        return Observable.zip(fileStatesObs, torrentFileObs,
+                BiFunction { list, torrentFile ->
+                    torrentFile to list
+                })
     }
 
     override fun verifyData(hash: String): Observable<Boolean> {
@@ -203,8 +205,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                 .flatMap { torrentFile.getAsTorrentObject() }
                 .filter { it is ParseTorrentResult.Success }
                 .subscribe({
-                    resultSubject.onNext((it as ParseTorrentResult.Success).torrentInfo)
-                    resultSubject.onCompleted()
+                    resultSubject.onNext((it as ParseTorrentResult.Success).torrentInfo ?: throw IllegalStateException("Could not read torrent"))
                 }, {
                     resultSubject.onError(it)
                 })
