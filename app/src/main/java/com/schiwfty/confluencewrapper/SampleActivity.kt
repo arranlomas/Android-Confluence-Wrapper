@@ -199,7 +199,8 @@ class SampleActivity : AppCompatActivity() {
 
         test_magnet.setOnClickListener {
             val hash = testMagnet.findHashFromMagnet()
-            torrentRepository.downloadTorrentInfo(hash!!)
+            val trackers = testMagnet.findTrackersFromMagnet()
+            torrentRepository.downloadTorrentInfo(hash!!, trackers = trackers)
                     .subscribe({
                         it.unwrapIfSuccess { text_view.text = "torrents: ${it.name}" }
                     }, {

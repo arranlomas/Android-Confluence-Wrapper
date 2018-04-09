@@ -79,13 +79,26 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                 .composeIo()
     }
 
-    override fun downloadTorrentInfo(hash: String, deleteErroneousTorrents: Boolean): Observable<ParseTorrentResult> {
+    override fun downloadTorrentInfo(hash: String, deleteErroneousTorrents: Boolean, trackers: List<String>?): Observable<ParseTorrentResult> {
         val torrentFile = File(Confluence.torrentInfoStorage, "$hash.torrent")
-        return confluenceApi.getInfo(hash)
+        val tempTorrentFile = File(Confluence.torrentInfoStorage, "temp$hash.torrent")
+        val obs = if (trackers != null && trackers.isNotEmpty())
+            Observable.just(tempTorrentFile.createTorrent(trackers.toTypedArray()))
+        else Observable.just("")
+        return obs
+                .flatMap {
+                    postTorrentFile(hash, tempTorrentFile).map {
+                        tempTorrentFile.delete()
+                        it
+                    }
+                }
+                .flatMap {
+                    confluenceApi.getInfo(hash).composeIo()
+                }
                 .map { it.byteStream().readBytes() }
                 .flatMap {
                     if (!torrentFile.exists()) torrentFile.writeBytes(it)
-                    it.getAsTorrentObject().mapDeleteFileOnError(torrentFile, deleteErroneousTorrents)
+                    torrentFile.getAsTorrentObject().mapDeleteFileOnError(torrentFile, deleteErroneousTorrents)
                 }
                 .map { if (it is ParseTorrentResult.Error) throw InvalidTorrentException(it.exception); it }
                 .composeIo()
@@ -205,7 +218,8 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                 .flatMap { torrentFile.getAsTorrentObject() }
                 .filter { it is ParseTorrentResult.Success }
                 .subscribe({
-                    resultSubject.onNext((it as ParseTorrentResult.Success).torrentInfo ?: throw IllegalStateException("Could not read torrent"))
+                    resultSubject.onNext((it as ParseTorrentResult.Success).torrentInfo
+                            ?: throw IllegalStateException("Could not read torrent"))
                 }, {
                     resultSubject.onError(it)
                 })

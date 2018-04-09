@@ -3,7 +3,6 @@ package com.schiwfty.torrentwrapper.utils
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.util.Base64
 import android.util.Log
 import android.webkit.MimeTypeMap
 import com.schiwfty.torrentwrapper.bencoding.TorrentCreator
@@ -12,9 +11,9 @@ import com.schiwfty.torrentwrapper.confluence.Confluence
 import com.schiwfty.torrentwrapper.models.TorrentFile
 import com.schiwfty.torrentwrapper.models.TorrentInfo
 import com.schiwfty.torrentwrapper.repositories.ITorrentRepository
+import io.reactivex.Observable
 import org.apache.commons.codec.binary.Base32
 import org.apache.commons.codec.binary.Hex
-import io.reactivex.Observable
 import java.io.*
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -28,10 +27,6 @@ import java.util.regex.Pattern
 fun File.getAsTorrentObject(): Observable<ParseTorrentResult> {
     if (!isValidTorrentFile()) return Observable.just(ParseTorrentResult.Error(IllegalArgumentException("Not a valid torrent file")))
     return getAsTorrentObject { TorrentParser.parseTorrent(this.absolutePath) }
-}
-
-fun ByteArray.getAsTorrentObject(): Observable<ParseTorrentResult> {
-    return getAsTorrentObject { TorrentParser.parseTorrent(this) }
 }
 
 private fun getAsTorrentObject(torrentParseMethod: () -> Observable<ParseTorrentResult>): Observable<ParseTorrentResult> {
@@ -108,8 +103,8 @@ fun String.findHashFromMagnet(): String? {
     val matcher = pattern.matcher(this)
     if (matcher.find()) {
         val initialHash = matcher.group(1)
-        if(initialHash.length == 40) return initialHash
-        if(initialHash.length == 32) {
+        if (initialHash.length == 40) return initialHash
+        if (initialHash.length == 32) {
             val decoded = Base32().decode(initialHash)
             val hexString = Hex.encodeHex(decoded)
             return String(hexString)
@@ -238,6 +233,20 @@ fun File.createTorrent(outputFile: File, announceList: Array<String>): Pair<Stri
     out.close()
     val infoHash = outputFile.hashMetaInfo()
     return Pair(infoHash, outputFile)
+}
+
+fun File.createTorrent(announceList: Array<String>): String {
+    val torrentCreator = TorrentCreator()
+    val info = HashMap<String, Any>()
+    info["name"] = name
+    val metainfo = HashMap<String, Any>()
+    metainfo["announce-list"] = announceList
+    metainfo["announce"] = announceList.first()
+    metainfo["info"] = info
+    val out = FileOutputStream(this)
+    torrentCreator.encodeMap(metainfo, out)
+    out.close()
+    return this.hashMetaInfo()
 }
 
 private fun File.hashMetaInfo(): String {

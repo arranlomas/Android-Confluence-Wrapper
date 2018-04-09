@@ -105,7 +105,7 @@
                 android:id="@+id/test_magnet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="test the dodgy magnet" />
+                android:text="test magnet" />
 
             <TextView
                 android:id="@+id/text_view"

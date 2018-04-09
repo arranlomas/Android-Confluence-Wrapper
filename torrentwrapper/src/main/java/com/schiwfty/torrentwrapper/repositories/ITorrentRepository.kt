@@ -31,7 +31,7 @@ interface ITorrentRepository {
     //returns the file state
     fun getFileState(torrentFile: TorrentFile): Observable<Pair<TorrentFile, List<FileStatePiece>>>
 
-    fun downloadTorrentInfo(hash: String, deleteErroneousTorrents: Boolean = false): Observable<ParseTorrentResult>
+    fun downloadTorrentInfo(hash: String, deleteErroneousTorrents: Boolean = false, trackers: List<String>? = emptyList()): Observable<ParseTorrentResult>
 
     fun startFileDownloading(torrentFile: TorrentFile, context: Context, wifiOnly: Boolean)
 
