@@ -235,13 +235,14 @@ fun File.createTorrent(outputFile: File, announceList: Array<String>): Pair<Stri
     return Pair(infoHash, outputFile)
 }
 
-fun File.createTorrent(announceList: Array<String>): String {
+fun File.createTorrent(announceList: Array<String>? = null): String {
     val torrentCreator = TorrentCreator()
     val info = HashMap<String, Any>()
-    info["name"] = name
     val metainfo = HashMap<String, Any>()
-    metainfo["announce-list"] = announceList
-    metainfo["announce"] = announceList.first()
+    announceList?.let {
+        metainfo["announce-list"] = it
+        if (it.isNotEmpty()) metainfo["announce"] = it.first()
+    }
     metainfo["info"] = info
     val out = FileOutputStream(this)
     torrentCreator.encodeMap(metainfo, out)

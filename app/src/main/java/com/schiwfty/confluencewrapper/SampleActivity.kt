@@ -32,7 +32,7 @@ class SampleActivity : AppCompatActivity() {
                 .subscribe { Log.v("is connected", "$it") }
 
         val pendingIntent = Intent(this, SampleActivity::class.java)
-        Confluence.start(this, R.mipmap.ic_launcher, "channelId", "channelName", true, true, pendingIntent)
+        Confluence.start(this, R.drawable.ic_android, "channelId", "channelName", true, true, pendingIntent)
                 .map { Log.v("confluence state", it.name) }
                 .flatMap { torrentRepository.isConnected(); }
                 .subscribe {

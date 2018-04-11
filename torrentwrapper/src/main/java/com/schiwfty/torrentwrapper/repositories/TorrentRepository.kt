@@ -82,10 +82,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     override fun downloadTorrentInfo(hash: String, deleteErroneousTorrents: Boolean, trackers: List<String>): Observable<ParseTorrentResult> {
         val torrentFile = File(Confluence.torrentInfoStorage, "$hash.torrent")
         val tempTorrentFile = File(Confluence.torrentInfoStorage, "temp$hash.torrent")
-        val obs = if (trackers.isNotEmpty())
-            Observable.just(tempTorrentFile.createTorrent(trackers.toTypedArray()))
-        else Observable.just("")
-        return obs
+        return Observable.just(tempTorrentFile.createTorrent(trackers.toTypedArray()))
                 .flatMap {
                     postTorrentFile(hash, tempTorrentFile).map {
                         tempTorrentFile.delete()
