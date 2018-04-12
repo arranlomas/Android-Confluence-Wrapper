@@ -22,6 +22,8 @@ import okhttp3.ResponseBody
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileInputStream
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 
 /**
  * Created by arran on 29/04/2017.
@@ -150,7 +152,11 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
 
     override fun verifyData(hash: String): Observable<String> {
         return confluenceApi.verifyData(hash)
-                .map { hash }
+                .timeout(2, TimeUnit.SECONDS)
+                .onErrorReturn {
+                    if (it is TimeoutException) hash
+                    else throw it
+                }
                 .composeIo()
     }
 
@@ -202,6 +208,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     override fun addFileToClient(file: File, announceList: List<String>): Observable<TorrentInfo> {
         return Observable.create<Pair<String, File>> { emitter ->
             val tempTorrentFile = File(Confluence.torrentInfoStorage, "temp${file.nameWithoutExtension}.torrent")
+            file.copyToConfluenceWorkingDirectory()
             val hash = file.createTorrentWithPieces(tempTorrentFile, announceList)
             emitter.onNext(hash to tempTorrentFile)
             emitter.onComplete()

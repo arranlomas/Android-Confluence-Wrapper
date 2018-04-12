@@ -34,7 +34,8 @@ internal class ConfluenceApi(private val clientAPI: ClientAPI) {
         return clientAPI.getFileState(hash, path)
     }
 
-    fun verifyData(hash: String): Observable<Boolean>{
+    fun verifyData(hash: String): Observable<String>{
         return clientAPI.verifyData(hash)
+                .map { hash }
     }
 }

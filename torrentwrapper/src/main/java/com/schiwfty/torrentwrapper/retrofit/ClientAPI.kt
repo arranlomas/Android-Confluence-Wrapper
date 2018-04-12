@@ -32,5 +32,5 @@ internal interface ClientAPI {
 
 
     @GET("/verifyData")
-    fun verifyData(@Query("ih") info_hash: String): Observable<Boolean>
+    fun verifyData(@Query("ih") info_hash: String): Observable<Any>
 }
