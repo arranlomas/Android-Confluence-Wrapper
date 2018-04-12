@@ -215,7 +215,7 @@ fun TorrentFile.canCast(): Boolean {
     } else return false
 }
 
-fun File.createTorrent(outputFile: File, announceList: Array<String>): Pair<String, File> {
+fun File.createTorrentWithPieces(outputFile: File, announceList: List<String>): String {
     val torrentCreator = TorrentCreator()
     val pieceLength = 512 * 1024
     val pieces = torrentCreator.hashPieces(this, pieceLength)
@@ -226,21 +226,21 @@ fun File.createTorrent(outputFile: File, announceList: Array<String>): Pair<Stri
     info.put("piece length", pieceLength)
     info.put("pieces", pieces)
     val metainfo = HashMap<String, Any>()
-    metainfo.put("announce-list", announceList)
+    metainfo.put("announce-list", announceList.toTypedArray())
     metainfo.put("info", info)
     val out = FileOutputStream(outputFile)
     torrentCreator.encodeMap(metainfo, out)
     out.close()
     val infoHash = outputFile.hashMetaInfo()
-    return Pair(infoHash, outputFile)
+    return infoHash
 }
 
-fun File.createTorrent(announceList: Array<String>? = null): String {
+fun File.createTorrent(announceList: List<String>? = null): String {
     val torrentCreator = TorrentCreator()
     val info = HashMap<String, Any>()
     val metainfo = HashMap<String, Any>()
     announceList?.let {
-        metainfo["announce-list"] = it
+        metainfo["announce-list"] = it.toTypedArray()
         if (it.isNotEmpty()) metainfo["announce"] = it.first()
     }
     metainfo["info"] = info
@@ -300,7 +300,7 @@ fun TorrentInfo.getMagnetLink(): String {
     return sb.toString()
 }
 
-internal val defaultAnnounceList: Array<String> = arrayOf(
+internal val defaultAnnounceList: List<String> = listOf(
         "udp://tracker.coppersurfer.tk:6969/announce",
         "udp://tracker.skyts.net:6969/announce",
         "udp://tracker.safe.moe:6969/announce",

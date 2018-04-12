@@ -82,7 +82,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
     override fun downloadTorrentInfo(hash: String, deleteErroneousTorrents: Boolean, trackers: List<String>): Observable<ParseTorrentResult> {
         val torrentFile = File(Confluence.torrentInfoStorage, "$hash.torrent")
         val tempTorrentFile = File(Confluence.torrentInfoStorage, "temp$hash.torrent")
-        return Observable.just(tempTorrentFile.createTorrent(trackers.toTypedArray()))
+        return Observable.just(tempTorrentFile.createTorrent(trackers))
                 .flatMap {
                     postTorrentFile(hash, tempTorrentFile).map {
                         tempTorrentFile.delete()
@@ -148,9 +148,9 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
                 })
     }
 
-    override fun verifyData(hash: String): Observable<Boolean> {
+    override fun verifyData(hash: String): Observable<String> {
         return confluenceApi.verifyData(hash)
-                .map { true }
+                .map { hash }
                 .composeIo()
     }
 
@@ -199,28 +199,30 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
         return torrentPersistence.getDownloadingFile(hash, path)
     }
 
-    override fun addFileToClient(file: File, announceList: Array<String>): PublishSubject<TorrentInfo> {
-        val confluenceFile = File(Confluence.workingDir.absolutePath, file.name)
-        if (file.exists() && !confluenceFile.exists()) file.copyTo(confluenceFile)
-        Log.v("copying file", "file: ${file.name} working directory: ${Confluence.workingDir.absolutePath}")
-        //TODO use observable instead of publish subject
-        val resultSubject = PublishSubject.create<TorrentInfo>()
-        val (hash, torrentFile) = file.createTorrent(File(Confluence.workingDir, "${file.nameWithoutExtension}.torrent"), announceList)
-        val inputStream = FileInputStream(torrentFile)
-        val bytes = IOUtils.toByteArray(inputStream)
-
-        Log.v("hash", hash)
-        confluenceApi.postTorrent(hash, bytes)
+    override fun addFileToClient(file: File, announceList: List<String>): Observable<TorrentInfo> {
+        return Observable.create<Pair<String, File>> { emitter ->
+            val tempTorrentFile = File(Confluence.torrentInfoStorage, "temp${file.nameWithoutExtension}.torrent")
+            val hash = file.createTorrentWithPieces(tempTorrentFile, announceList)
+            emitter.onNext(hash to tempTorrentFile)
+            emitter.onComplete()
+        }.flatMap {
+            val (hash, tempTorrentFile) = it
+            postTorrentFile(hash, tempTorrentFile).map {
+                tempTorrentFile.delete()
+                hash
+            }
+        }.flatMap {
+            verifyData(it)
+        }.map {
+            File(Confluence.torrentInfoStorage, "$it.torrent")
+        }.flatMap {
+            it.getAsTorrentObject()
+        }.map {
+            it.unwrapIfSuccess {
+                return@unwrapIfSuccess it
+            } ?: throw InvalidTorrentException((it as ParseTorrentResult.Error).exception)
+        }
                 .composeIo()
-                .flatMap { torrentFile.getAsTorrentObject() }
-                .filter { it is ParseTorrentResult.Success }
-                .subscribe({
-                    resultSubject.onNext((it as ParseTorrentResult.Success).torrentInfo
-                            ?: throw IllegalStateException("Could not read torrent"))
-                }, {
-                    resultSubject.onError(it)
-                })
-        return resultSubject
     }
 
     override fun clearPersistence() {

@@ -26,7 +26,7 @@ interface ITorrentRepository {
 
     fun postTorrentFile(hash: String, file: File): Observable<ResponseBody>
 
-    fun verifyData(hash: String): Observable<Boolean>
+    fun verifyData(hash: String): Observable<String>
 
     //returns the file state
     fun getFileState(torrentFile: TorrentFile): Observable<Pair<TorrentFile, List<FileStatePiece>>>
@@ -35,7 +35,7 @@ interface ITorrentRepository {
 
     fun startFileDownloading(torrentFile: TorrentFile, context: Context, wifiOnly: Boolean)
 
-    fun addFileToClient(file: File, announceList: Array<String> = defaultAnnounceList): PublishSubject<TorrentInfo>
+    fun addFileToClient(file: File, announceList: List<String> = defaultAnnounceList): Observable<TorrentInfo>
 
     //PERSISTENCE
     //adds a torrent file to the realm database

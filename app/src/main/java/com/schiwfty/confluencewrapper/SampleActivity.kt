@@ -14,6 +14,8 @@ import java.io.File
 class SampleActivity : AppCompatActivity() {
     lateinit var torrentRepository: ITorrentRepository
 
+    lateinit var hashFromFileAdd: String
+
     val testMagnet = "magnet:?xt=urn:btih:DQZJ2MJHQN2XZEWGQNRTIWR56ZNKGM3C&tr=http://nyaa.tracker.wf:7777/announce&tr=udp://tracker.coppersurfer.tk:6969/announce&tr=udp://tracker.internetwarriors.net:1337/announce&tr=udp://tracker.leechersparadise.org:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://open.stealth.si:80/announce&tr=udp://p4p.arenabg.com:1337/announce&tr=udp://mgtracker.org:6969/announce&tr=udp://tracker.tiny-vps.com:6969/announce&tr=udp://peerfect.org:6969/announce&tr=http://share.camoe.cn:8080/announce&tr=http://t.nyaatracker.com:80/announce&tr=https://open.kickasstracker.com:443/announce"
     val validMagnet = "magnet:?xt=urn:btih:3ac1e9fb84a728b32ef953075c203e47c25069d3&dn=Super+Mario+Bros+3+for+Android+v1.0&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Fzer0day.ch%3A1337&tr=udp%3A%2F%2Fopen.demonii.com%3A1337&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fexodus.desync.com%3A6969"
 
@@ -112,9 +114,10 @@ class SampleActivity : AppCompatActivity() {
         }
 
         add_torrent.setOnClickListener {
-            val testFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/Cloudburst/Test.jpg")
+            val testFile = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath + "/test.jpg")
             torrentRepository.addFileToClient(testFile)
                     .subscribe({
+                        hashFromFileAdd = it.info_hash
                         text_view.text = "Torrent name ${it.name}\nfiles: ${it.fileList}\n magnet: ${it.getMagnetLink()}"
                     }, {
                         text_view.text = it.localizedMessage
@@ -147,7 +150,7 @@ class SampleActivity : AppCompatActivity() {
         }
 
         verify_data.setOnClickListener {
-            torrentRepository.verifyData(hashUnderTest)
+            torrentRepository.verifyData(hashFromFileAdd)
                     .subscribe({
                         text_view.text = "data verified"
                     }, {
