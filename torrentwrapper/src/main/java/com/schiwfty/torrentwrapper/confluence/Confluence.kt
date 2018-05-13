@@ -15,8 +15,8 @@ import com.uphyca.stetho_realm.RealmInspectorModulesProvider
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.subjects.PublishSubject
 import io.realm.Realm
+import io.realm.RealmConfiguration
 import java.io.File
-
 
 /**
  * Created by arran on 11/04/2017.
@@ -44,55 +44,60 @@ object Confluence {
     fun install(context: Context, workingDirectoryPath: String, daemonPort: Int = 8080) {
         this.workingDir = File(workingDirectoryPath)
         this.daemonPort = daemonPort.toString()
+
         Realm.init(context)
+        Realm.setDefaultConfiguration(RealmConfiguration.Builder()
+            .deleteRealmIfMigrationNeeded()
+            .build())
+
         Stetho.initialize(
-                Stetho.newInitializerBuilder(context)
-                        .enableDumpapp(Stetho.defaultDumperPluginsProvider(context))
-                        .enableWebKitInspector(RealmInspectorModulesProvider.builder(context).build())
-                        .build())
+            Stetho.newInitializerBuilder(context)
+                .enableDumpapp(Stetho.defaultDumperPluginsProvider(context))
+                .enableWebKitInspector(RealmInspectorModulesProvider.builder(context).build())
+                .build())
 
         val arch = System.getProperty("os.arch")
         Log.v("architecture", arch)
 
         torrentInfoStorage = File(Confluence.workingDir.absolutePath + File.separator + "torrents")
         torrentRepositoryComponent = DaggerTorrentRepositoryComponent.builder()
-                .networkModule(NetworkModule())
-                .build()
+            .networkModule(NetworkModule())
+            .build()
         torrentRepository = torrentRepositoryComponent.getTorrentRepository()
     }
 
     fun start(activity: Activity,
-              notificationResourceId: Int,
-              channelId: String? = null,
-              channelName: String? = null,
-              seed: Boolean = false,
-              showStopAction: Boolean = false,
-              targetIntent: Intent? = null,
-              onPermissionDenied: (() -> Unit)? = null): PublishSubject<ConfluenceState> {
+        notificationResourceId: Int,
+        channelId: String? = null,
+        channelName: String? = null,
+        seed: Boolean = false,
+        showStopAction: Boolean = false,
+        targetIntent: Intent? = null,
+        onPermissionDenied: (() -> Unit)? = null): PublishSubject<ConfluenceState> {
 
         RxPermissions(activity)
-                .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                .flatMap {
-                    if (it) {
-                        workingDir.mkdirs()
-                        torrentInfoStorage.mkdirs()
-                    } else {
-                        onPermissionDenied?.invoke()
-                    }
-                    torrentRepository.isConnected()
-
+            .request(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            .flatMap {
+                if (it) {
+                    workingDir.mkdirs()
+                    torrentInfoStorage.mkdirs()
+                } else {
+                    onPermissionDenied?.invoke()
                 }
-                .subscribe({ connected ->
-                    if (!connected) {
-                        ConfluenceDaemonService.start(activity, notificationResourceId, channelId, channelName, seed, showStopAction, targetIntent)
-                        listenForDaemon()
-                    } else {
-                        subscriptions.dispose()
-                        startedSubject.onNext(ConfluenceState.STARTED)
-                    }
-                }, {
-                    it.printStackTrace()
-                })
+                torrentRepository.isConnected()
+
+            }
+            .subscribe({ connected ->
+                if (!connected) {
+                    ConfluenceDaemonService.start(activity, notificationResourceId, channelId, channelName, seed, showStopAction, targetIntent)
+                    listenForDaemon()
+                } else {
+                    subscriptions.dispose()
+                    startedSubject.onNext(ConfluenceState.STARTED)
+                }
+            }, {
+                it.printStackTrace()
+            })
         return startedSubject
     }
 
@@ -102,14 +107,13 @@ object Confluence {
 
     private fun listenForDaemon() {
         subscriptions.add(torrentRepository.getStatus()
-                .retry()
-                .subscribe({
-                    subscriptions.dispose()
-                    startedSubject.onNext(ConfluenceState.STARTED)
-                }, {
-                    startedSubject.onNext(ConfluenceState.WAITING)
-                    it.printStackTrace()
-                }))
-
+            .retry()
+            .subscribe({
+                subscriptions.dispose()
+                startedSubject.onNext(ConfluenceState.STARTED)
+            }, {
+                startedSubject.onNext(ConfluenceState.WAITING)
+                it.printStackTrace()
+            }))
     }
 }
