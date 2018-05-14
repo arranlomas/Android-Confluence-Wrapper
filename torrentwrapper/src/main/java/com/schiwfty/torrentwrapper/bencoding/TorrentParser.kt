@@ -57,8 +57,14 @@ object TorrentParser {
             t.announce = parseAnnounce(torrentDictionary)
             t.info_hash = Utils.SHAsum(infoDictionary.bencode())
             t.pieceLength = parsePieceLength(infoDictionary)
-            t.pieces = parsePiecesHashes(infoDictionary)
-            t.piecesBlob = parsePiecesBlob(infoDictionary)
+
+            parsePiecesHashes(infoDictionary)?.let {
+                t.pieces = it
+            } ?: return Observable.just(ParseTorrentResult.Error(IllegalStateException("Error parsing SHA1 piece hashes")))
+
+            parsePiecesBlob(infoDictionary)?.let {
+                t.piecesBlob = it
+            } ?: return Observable.just(ParseTorrentResult.Error(IllegalStateException("Info dictionary does not contain pieces bytestring!")))
 
             ///////////////////////////////////
             //// OPTIONAL FIELDS //////////////
@@ -181,12 +187,10 @@ private fun parseAnnounce(dictionary: BDictionary): String {
  * @return pieces — a hash list, i.e., a concatenation of each piece's SHA-1 hash. As SHA-1 returns a 160-bit hash,
  * * pieces will be a string whose length is a multiple of 160-bits.
  */
-private fun parsePiecesBlob(info: BDictionary): ByteArray {
+private fun parsePiecesBlob(info: BDictionary): ByteArray? {
     if (null != info.find(BByteString("pieces"))) {
         return (info.find(BByteString("pieces")) as BByteString).data
-    } else {
-        throw Error("Info dictionary does not contain pieces bytestring!")
-    }
+    } else return null
 }
 
 /**
@@ -195,7 +199,7 @@ private fun parsePiecesBlob(info: BDictionary): ByteArray {
  * @return pieces — a hash list, i.e., a concatenation of each piece's SHA-1 hash. As SHA-1 returns a 160-bit hash,
  * * pieces will be a string whose length is a multiple of 160-bits.
  */
-private fun parsePiecesHashes(info: BDictionary): List<String> {
+private fun parsePiecesHashes(info: BDictionary): List<String>? {
     if (null != info.find(BByteString("pieces"))) {
         val sha1HexRenders = ArrayList<String>()
         val piecesBlob = (info.find(BByteString("pieces")) as BByteString).data
@@ -208,11 +212,11 @@ private fun parsePiecesHashes(info: BDictionary): List<String> {
                 sha1HexRenders.add(sha1)
             }
         } else {
-            throw Error("Error parsing SHA1 piece hashes. Bytecount was not a multiple of 20.")
+            return null
         }
         return sha1HexRenders
     } else {
-        throw Error("Info dictionary does not contain pieces bytestring!")
+        return null
     }
 }
 
