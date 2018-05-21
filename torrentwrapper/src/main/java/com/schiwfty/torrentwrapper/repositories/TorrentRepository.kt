@@ -178,6 +178,7 @@ internal class TorrentRepository(val confluenceApi: ConfluenceApi, val torrentPe
         val uri = Uri.parse(torrentFile.getDownloadableUrl())
         Log.v("requesting download", uri.toString())
         val request = DownloadManager.Request(uri)
+        if (wifiOnly) request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI)
         request.setTitle(torrentFile.getFullPath())
                 .setDescription("part of torrent: ${torrentFile.parentTorrentName} with hash ${torrentFile.torrentHash}")
         dm.enqueue(request)

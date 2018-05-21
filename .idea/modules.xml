@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Android-Confluence-Wrapper.iml" filepath="$PROJECT_DIR$/Android-Confluence-Wrapper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ConfluenceWrapper.iml" filepath="$PROJECT_DIR$/ConfluenceWrapper.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/confluencewrapper/confluencewrapper.iml" filepath="$PROJECT_DIR$/confluencewrapper/confluencewrapper.iml" />
       <module fileurl="file://$PROJECT_DIR$/torrentwrapper/torrentwrapper.iml" filepath="$PROJECT_DIR$/torrentwrapper/torrentwrapper.iml" />
